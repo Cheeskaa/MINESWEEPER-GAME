@@ -1,5 +1,6 @@
 package minesweeper;
 
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -17,11 +18,11 @@ public class Minesweeper extends JPanel {
         }
     }
 
-    int tileSize = 70;
+    int tileSize = 80;
     int numRows;
     int numCols;
-    int boardWidth; // = numCols * tileSize;
-    int boardHeight; // = numRows * tileSize;
+    int boardWidth = numCols * tileSize; //i uncommented the "= numCols * tileSize"
+    int boardHeight = numRows * tileSize;
     // int boardWidth = 1200;
     // int boardHeight = 600;
 
@@ -47,13 +48,15 @@ public class Minesweeper extends JPanel {
             case 0:
                 mineCount = 10;
                 numCols = 8;
+                tileSize = 70; //added this
                 break;
             case 1:
                 mineCount = 20;
                 numCols = 12;
+                tileSize = 70; //added this
                 break;
             case 2:
-                tileSize = 60;
+                tileSize = 50; //changed it to 50
                 mineCount = 40;
                 numCols = 16;
                 break;
@@ -89,6 +92,13 @@ public class Minesweeper extends JPanel {
                 MineTile tile = new MineTile(r, c);
                 board[r][c] = tile;
 
+                // Alternate colors for a checkered pattern
+                if ((r + c) % 2 == 0) {
+                    tile.setBackground(Color.decode("#C4E1F6")); // Light blue
+                } else {
+                    tile.setBackground(Color.decode("#FFF5CD")); // Light cream
+                }
+
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
                 tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, 45));
@@ -114,6 +124,7 @@ public class Minesweeper extends JPanel {
                         } else if (e.getButton() == MouseEvent.BUTTON3) { // right click
                             if (tile.getText() == "" && tile.isEnabled()) {
                                 tile.setText("🚩");
+                                tile.setForeground(Color.RED); // Set the flag color to red
                             } else if (tile.getText() == "🚩") {
                                 tile.setText("");
                             }
@@ -212,6 +223,8 @@ public class Minesweeper extends JPanel {
             checkMine(r + 1, c + 1); // bottom right
         }
 
+        tile.setBackground(Color.decode("#ECCA9C")); // Set revealed tile color
+
         if (tilesClicked == numRows * numCols - mineList.size()) {
             gameOver = true;
             textLabel.setText("Mines Cleared!");
@@ -228,7 +241,7 @@ public class Minesweeper extends JPanel {
         }
         return 0;
     }
-
+    
     // public void paintComponent (Graphics g) {
     //   super.paintComponent(g);
     //   draw(g);
