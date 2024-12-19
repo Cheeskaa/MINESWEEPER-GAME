@@ -18,10 +18,10 @@ public class Minesweeper extends JPanel {
     }
 
     int tileSize = 70;
-    int numRows = 8;
-    int numCols = numRows;
-    int boardWidth = numCols * tileSize;
-    int boardHeight = numRows * tileSize;
+    int numRows;
+    int numCols;
+    int boardWidth; // = numCols * tileSize;
+    int boardHeight; // = numRows * tileSize;
     // int boardWidth = 1200;
     // int boardHeight = 600;
 
@@ -30,19 +30,40 @@ public class Minesweeper extends JPanel {
     JPanel textPanel = new JPanel();
     JPanel boardPanel = new JPanel();
 
-    int mineCount = 10; // Will need to be modified based on difficulty
-    MineTile[][] board = new MineTile[numRows][numCols];
+    int mineCount;
+    MineTile[][] board; // = new MineTile[numRows][numCols];
     ArrayList<MineTile> mineList;
     Random random = new Random();
 
-    // Exceptionms, abstraction, encapsulation, inheritance, polymorphism, interfaec
+    // Exceptions, abstraction, encapsulation, inheritance, polymorphism, interface
 
     // Image backgroundImg;
 
     int tilesClicked = 0; // goal is to click all tiles except the ones containing mines
     boolean gameOver = false;
 
-    public Minesweeper() {
+    public Minesweeper(int choice) {
+        switch (choice) {
+            case 0:
+                mineCount = 10;
+                numCols = 8;
+                break;
+            case 1:
+                mineCount = 20;
+                numCols = 12;
+                break;
+            case 2:
+                tileSize = 60;
+                mineCount = 40;
+                numCols = 16;
+                break;
+            default:
+                break;
+        }
+        numRows = numCols;
+        boardWidth = numCols * tileSize;
+        boardHeight = numRows * tileSize;
+        board = new MineTile[numRows][numCols];
         // frame.setVisible(true);
         frame.setSize(boardWidth, boardHeight);
         frame.setLocationRelativeTo(null);
