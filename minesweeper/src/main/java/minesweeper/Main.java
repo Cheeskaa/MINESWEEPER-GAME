@@ -1,3 +1,12 @@
+// This file is the main file of the Minesweeper project. It contains the main
+// method which is the entry point of the program. It creates a dialog window
+// which asks the user to select a difficulty level. Depending on the level
+// selected by the user, it creates an instance of the Minesweeper class with
+// the corresponding parameters. The Minesweeper class is responsible for
+// creating the game board and handling all the game logic. The game board is
+// created in a separate window and the main window is closed after the
+// difficulty level is selected.
+
 package minesweeper;
 
 import javax.swing.*;
@@ -77,3 +86,7 @@ public class Main {
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Add padding inside the button
     }
 }
+
+
+
+
