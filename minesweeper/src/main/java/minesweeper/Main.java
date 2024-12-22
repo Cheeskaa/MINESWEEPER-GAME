@@ -1,12 +1,3 @@
-// This file is the main file of the Minesweeper project. It contains the main
-// method which is the entry point of the program. It creates a dialog window
-// which asks the user to select a difficulty level. Depending on the level
-// selected by the user, it creates an instance of the Minesweeper class with
-// the corresponding parameters. The Minesweeper class is responsible for
-// creating the game board and handling all the game logic. The game board is
-// created in a separate window and the main window is closed after the
-// difficulty level is selected.
-
 package minesweeper;
 
 import javax.swing.*;
@@ -14,25 +5,29 @@ import java.awt.*;
 
 public class Main {
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> createAndShowDifficultyDialog());
+    }
+
+    private static void createAndShowDifficultyDialog() {
         JFrame frame = new JFrame("Difficulty");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create a custom panel for the dialog
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
-        panel.setBackground(Color.LIGHT_GRAY); // Change the background of the screen
+        panel.setBackground(Color.LIGHT_GRAY);
 
         // Add a title label
         JLabel label = new JLabel("Choose a Difficulty", SwingConstants.CENTER);
         label.setFont(new Font("Arial", Font.BOLD, 18));
         label.setForeground(Color.BLACK);
-        label.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0)); // Add margin to the label
+        label.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         panel.add(label, BorderLayout.NORTH);
 
-        // Create a button panel with padding
+        // Create a button panel
         JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 10));
-        buttonPanel.setBackground(Color.LIGHT_GRAY); // Match the background
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add margin around buttons
+        buttonPanel.setBackground(Color.LIGHT_GRAY);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Create buttons
         JButton easyButton = new JButton("Easy");
@@ -49,7 +44,7 @@ public class Main {
 
         panel.add(buttonPanel, BorderLayout.CENTER);
 
-        // Create a dialog
+        // Create and configure a dialog
         JDialog dialog = new JDialog(frame, "Difficulty", true);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setSize(400, 200);
@@ -57,24 +52,23 @@ public class Main {
         dialog.add(panel, BorderLayout.CENTER);
         dialog.setLocationRelativeTo(null);
 
-        // Add action listeners for buttons
-        easyButton.addActionListener(e -> {
-            dialog.dispose();
-            Minesweeper minesweeper = new Minesweeper(0);
-        });
-
-        mediumButton.addActionListener(e -> {
-            dialog.dispose();
-            Minesweeper minesweeper = new Minesweeper(1);
-        });
-
-        hardButton.addActionListener(e -> {
-            dialog.dispose();
-            Minesweeper minesweeper = new Minesweeper(2);
-        });
+        // Add action listeners
+        easyButton.addActionListener(e -> startGame(dialog, 0));
+        mediumButton.addActionListener(e -> startGame(dialog, 1));
+        hardButton.addActionListener(e -> startGame(dialog, 2));
 
         dialog.setVisible(true);
         frame.dispose();
+    }
+
+    private static void startGame(JDialog dialog, int difficulty) {
+        dialog.dispose();
+        try {
+            Minesweeper minesweeper = new Minesweeper(difficulty);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Failed to start Minesweeper: " + e.getMessage(), 
+                                          "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // Helper method to style buttons
@@ -83,10 +77,6 @@ public class Main {
         button.setBackground(backgroundColor);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Add padding inside the button
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
     }
 }
-
-
-
-
