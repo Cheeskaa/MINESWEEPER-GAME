@@ -18,7 +18,7 @@ public class Minesweeper extends JPanel {
         }
     }
 
-    int tileSize = 80;
+    int tileSize = 70;
     int numRows;
     int numCols;
     int boardWidth = numCols * tileSize; //i uncommented the "= numCols * tileSize"
@@ -48,15 +48,13 @@ public class Minesweeper extends JPanel {
             case 0:
                 mineCount = 10;
                 numCols = 8;
-                tileSize = 70; //added this
                 break;
             case 1:
                 mineCount = 20;
                 numCols = 12;
-                tileSize = 70; //added this
                 break;
             case 2:
-                tileSize = 50; //changed it to 50
+                tileSize = 50; // changed it to 50
                 mineCount = 40;
                 numCols = 16;
                 break;
