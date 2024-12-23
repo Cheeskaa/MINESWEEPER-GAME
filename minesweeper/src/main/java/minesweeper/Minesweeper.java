@@ -25,6 +25,7 @@ public class Minesweeper extends JPanel {
     int boardHeight = numRows * tileSize;
     // int boardWidth = 1200;
     // int boardHeight = 600;
+    int emojisize = 40;
 
     JFrame frame = new JFrame("Minesweeper");
     JLabel textLabel = new JLabel();
@@ -57,6 +58,7 @@ public class Minesweeper extends JPanel {
                 tileSize = 50; // changed it to 50
                 mineCount = 40;
                 numCols = 16;
+                emojisize = 30; // changed it to 30
                 break;
             default:
                 break;
@@ -99,7 +101,7 @@ public class Minesweeper extends JPanel {
 
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
-                tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, 45));
+                tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
                 // tile.setText("💣");
                 tile.addMouseListener(new MouseAdapter() {
                     @Override
