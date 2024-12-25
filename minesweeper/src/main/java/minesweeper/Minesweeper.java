@@ -20,11 +20,12 @@ public class Minesweeper extends JPanel {
         }
     }
 
-    int tileSize = 80;
+    int tileSize = 70;
     int numRows;
     int numCols;
     int boardWidth;
     int boardHeight;
+    int fontsize = 45;
 
     private JButton[][] buttons;
     private boolean[][] mineLocations;
@@ -48,17 +49,16 @@ public class Minesweeper extends JPanel {
             case 0:
                 mineCount = 10;
                 numCols = 8;
-                tileSize = 70; //added this
                 break;
             case 1:
                 mineCount = 20;
                 numCols = 12;
-                tileSize = 70; //added this
                 break;
             case 2:
                 tileSize = 50; //changed it to 50
                 mineCount = 40;
                 numCols = 16;
+                fontsize = 35;
                 break;
             default:
                 break;
@@ -100,7 +100,7 @@ public class Minesweeper extends JPanel {
 
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
-                tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, 45));
+                tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, fontsize));
                 tile.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
