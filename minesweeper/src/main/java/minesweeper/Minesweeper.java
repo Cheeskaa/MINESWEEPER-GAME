@@ -1,6 +1,5 @@
 package minesweeper;
 
-
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -21,10 +20,8 @@ public class Minesweeper extends JPanel {
     int tileSize = 70;
     int numRows;
     int numCols;
-    int boardWidth = numCols * tileSize; //i uncommented the "= numCols * tileSize"
-    int boardHeight = numRows * tileSize;
-    // int boardWidth = 1200;
-    // int boardHeight = 600;
+    int boardWidth;
+    int boardHeight;
     int emojisize = 40;
 
     JFrame frame = new JFrame("Minesweeper");
@@ -33,15 +30,13 @@ public class Minesweeper extends JPanel {
     JPanel boardPanel = new JPanel();
 
     int mineCount;
-    MineTile[][] board; // = new MineTile[numRows][numCols];
+    int treasureCount = 1;  // Number of treasures
+    MineTile[][] board;
     ArrayList<MineTile> mineList;
+    ArrayList<MineTile> treasureList;
     Random random = new Random();
 
-    // Exceptions, abstraction, encapsulation, inheritance, polymorphism, interface
-
-    // Image backgroundImg;
-
-    int tilesClicked = 0; // goal is to click all tiles except the ones containing mines
+    int tilesClicked = 0;
     boolean gameOver = false;
 
     public Minesweeper(int choice) {
@@ -55,10 +50,10 @@ public class Minesweeper extends JPanel {
                 numCols = 12;
                 break;
             case 2:
-                tileSize = 50; // changed it to 50
+                tileSize = 50;
                 mineCount = 40;
                 numCols = 16;
-                emojisize = 30; // changed it to 30
+                emojisize = 30;
                 break;
             default:
                 break;
@@ -67,7 +62,6 @@ public class Minesweeper extends JPanel {
         boardWidth = numCols * tileSize;
         boardHeight = numRows * tileSize;
         board = new MineTile[numRows][numCols];
-        // frame.setVisible(true);
         frame.setSize(boardWidth, boardHeight);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
@@ -76,15 +70,14 @@ public class Minesweeper extends JPanel {
 
         textLabel.setFont(new Font("Arial", Font.BOLD, 25));
         textLabel.setHorizontalAlignment(JLabel.CENTER);
-        textLabel.setText("Minesweeper: " + Integer.toString(mineCount));
+        textLabel.setText("Minesweeper: " + mineCount);
         textLabel.setOpaque(true);
 
         textPanel.setLayout(new BorderLayout());
         textPanel.add(textLabel);
         frame.add(textPanel, BorderLayout.NORTH);
 
-        boardPanel.setLayout(new GridLayout(numRows, numCols)); // 8x8
-        // boardPanel.setBackground(Color.green);
+        boardPanel.setLayout(new GridLayout(numRows, numCols));
         frame.add(boardPanel);
 
         for (int r = 0; r < numRows; r++) {
@@ -92,17 +85,15 @@ public class Minesweeper extends JPanel {
                 MineTile tile = new MineTile(r, c);
                 board[r][c] = tile;
 
-                // Alternate colors for a checkered pattern
                 if ((r + c) % 2 == 0) {
-                    tile.setBackground(Color.decode("#C4E1F6")); // Light blue
+                    tile.setBackground(Color.decode("#C4E1F6"));
                 } else {
-                    tile.setBackground(Color.decode("#FFF5CD")); // Light cream
+                    tile.setBackground(Color.decode("#FFF5CD"));
                 }
 
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
                 tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
-                // tile.setText("💣");
                 tile.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
@@ -112,20 +103,21 @@ public class Minesweeper extends JPanel {
 
                         MineTile tile = (MineTile) e.getSource();
 
-                        // left click
                         if (e.getButton() == MouseEvent.BUTTON1) {
-                            if (tile.getText() == "") {
+                            if (tile.getText().equals("")) {
                                 if (mineList.contains(tile)) {
                                     revealMines();
+                                } else if (treasureList.contains(tile)) {
+                                    revealTreasure(tile);
                                 } else {
                                     checkMine(tile.r, tile.c);
                                 }
                             }
-                        } else if (e.getButton() == MouseEvent.BUTTON3) { // right click
-                            if (tile.getText() == "" && tile.isEnabled()) {
+                        } else if (e.getButton() == MouseEvent.BUTTON3) {
+                            if (tile.getText().equals("") && tile.isEnabled()) {
                                 tile.setText("🚩");
-                                tile.setForeground(Color.RED); // Set the flag color to red
-                            } else if (tile.getText() == "🚩") {
+                                tile.setForeground(Color.RED);
+                            } else if (tile.getText().equals("🚩")) {
                                 tile.setText("");
                             }
                         }
@@ -138,24 +130,14 @@ public class Minesweeper extends JPanel {
         frame.setVisible(true);
 
         setMines();
-
-        // setPreferredSize(new Dimension(boardWidth, boardHeight));
-        // setFocusable(true);
-
-        // backgroundImg = new ImageIcon(getClass().getResource("./ocean.gif")).getImage();
+        setTreasures();
     }
 
     public void setMines() {
-        mineList = new ArrayList<MineTile>();
-
-        // mineList.add(board[2][2]);
-        // mineList.add(board[2][3]);
-        // mineList.add(board[5][6]);
-        // mineList.add(board[3][4]);
-        // mineList.add(board[1][1]);
+        mineList = new ArrayList<>();
         int mineLeft = mineCount;
         while (mineLeft > 0) {
-            int r = random.nextInt(numRows); // 0 - 7
+            int r = random.nextInt(numRows);
             int c = random.nextInt(numCols);
 
             MineTile tile = board[r][c];
@@ -166,14 +148,40 @@ public class Minesweeper extends JPanel {
         }
     }
 
+    public void setTreasures() {
+        treasureList = new ArrayList<>();
+        int treasureLeft = treasureCount;
+        while (treasureLeft > 0) {
+            int r = random.nextInt(numRows);
+            int c = random.nextInt(numCols);
+
+            MineTile tile = board[r][c];
+            if (!mineList.contains(tile) && !treasureList.contains(tile)) {
+                treasureList.add(tile);
+                treasureLeft -= 1;
+            }
+        }
+    }
+
     public void revealMines() {
-        for (int i = 0; i < mineList.size(); i++) {
-            MineTile tile = mineList.get(i);
+        for (MineTile tile : mineList) {
             tile.setText("💣");
         }
-
+        for (MineTile treasure : treasureList) {
+            treasure.setText("💎");
+            treasure.setForeground(Color.decode("#FFD700"));
+        }
         gameOver = true;
         textLabel.setText("Game Over!");
+    }
+
+    public void revealTreasure(MineTile tile) {
+        tile.setText("💎");
+        tile.setForeground(Color.decode("#FFD700"));  // Set diamond color (Gold)
+        tile.removeMouseListener(tile.getMouseListeners()[0]);  // Remove click functionality
+        // tile.setEnabled(false);
+        gameOver = true;
+        textLabel.setText("You Win! Treasure Found!");
     }
 
     public void checkMine(int r, int c) {
@@ -189,20 +197,14 @@ public class Minesweeper extends JPanel {
         tilesClicked += 1;
 
         int minesFound = 0;
-        
-        // top 3
-        minesFound += countMine(r - 1, c - 1); // top left
-        minesFound += countMine(r - 1, c); // top
-        minesFound += countMine(r - 1, c + 1); // top right
-
-        // left and right
-        minesFound += countMine(r, c - 1); // left
-        minesFound += countMine(r, c + 1); // right
-
-        // bottom 3
-        minesFound += countMine(r + 1, c - 1); // bottom left
-        minesFound += countMine(r + 1, c); // bottom
-        minesFound += countMine(r + 1, c + 1); // bottom right
+        minesFound += countMine(r - 1, c - 1);
+        minesFound += countMine(r - 1, c);
+        minesFound += countMine(r - 1, c + 1);
+        minesFound += countMine(r, c - 1);
+        minesFound += countMine(r, c + 1);
+        minesFound += countMine(r + 1, c - 1);
+        minesFound += countMine(r + 1, c);
+        minesFound += countMine(r + 1, c + 1);
 
         if (minesFound > 0) {
             tile.setText(Integer.toString(minesFound));
@@ -235,32 +237,9 @@ public class Minesweeper extends JPanel {
         if (r < 0 || r >= numRows || c < 0 || c >= numCols) {
             return 0;
         }
-
         if (mineList.contains(board[r][c])) {
             return 1;
         }
         return 0;
     }
-    
-    // public void paintComponent (Graphics g) {
-    //   super.paintComponent(g);
-    //   draw(g);
-    // }
-
-    // public void draw(Graphics g) {
-    //   // DRAW BACKGROUND
-    //   if (backgroundImg != null) {
-    //       g.drawImage(backgroundImg, 0, 0, boardWidth, boardHeight, this);
-    //   }
-        
-    //   g.setColor(Color.black);
-    //   g.setFont(new Font("Arial", Font.PLAIN, 32));
-    //   g.drawString("Choose your difficulty: ", 10, 35);
-    // }
-
-    // @Override
-    // public void actionPerformed(ActionEvent e) {
-    //   repaint();
-    // }
-
 }
