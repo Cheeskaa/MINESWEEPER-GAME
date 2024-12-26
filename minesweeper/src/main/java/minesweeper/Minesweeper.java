@@ -79,6 +79,7 @@ public class Minesweeper extends JPanel {
 
         boardPanel.setLayout(new GridLayout(numRows, numCols));
         frame.add(boardPanel);
+        
 
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
@@ -86,11 +87,12 @@ public class Minesweeper extends JPanel {
                 board[r][c] = tile;
 
                 if ((r + c) % 2 == 0) {
-                    tile.setBackground(Color.decode("#C4E1F6"));
+                    tile.setBackground(Color.decode("#2A0055"));
                 } else {
-                    tile.setBackground(Color.decode("#FFF5CD"));
+                    tile.setBackground(Color.decode("#47008E"));
                 }
 
+                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));  // White gridlines, 2px thick
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
                 tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
@@ -166,6 +168,7 @@ public class Minesweeper extends JPanel {
     public void revealMines() {
         for (MineTile tile : mineList) {
             tile.setText("💣");
+            tile.setForeground(Color.decode("#00FF7F"));  // Bomb color (Orange-Red)
         }
         for (MineTile treasure : treasureList) {
             treasure.setText("💎");
@@ -208,6 +211,7 @@ public class Minesweeper extends JPanel {
 
         if (minesFound > 0) {
             tile.setText(Integer.toString(minesFound));
+            // tile.setForeground(Color.decode("#F2F597"));
         } else {
             tile.setText("");
 
@@ -225,7 +229,7 @@ public class Minesweeper extends JPanel {
             checkMine(r + 1, c + 1); // bottom right
         }
 
-        tile.setBackground(Color.decode("#ECCA9C")); // Set revealed tile color
+        tile.setBackground(Color.decode("#1C0039")); // Set revealed tile color
 
         if (tilesClicked == numRows * numCols - mineList.size()) {
             gameOver = true;
@@ -242,4 +246,5 @@ public class Minesweeper extends JPanel {
         }
         return 0;
     }
+    
 }
