@@ -8,7 +8,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> createAndShowDifficultyDialog());
     }
 
-    private static void createAndShowDifficultyDialog() {
+    public static void createAndShowDifficultyDialog() {
         JFrame frame = new JFrame("Difficulty");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -61,18 +61,19 @@ public class Main {
         frame.dispose();
     }
 
-    private static void startGame(JDialog dialog, int difficulty) {
+    public static void startGame(JDialog dialog, int difficulty) {
         dialog.dispose();
-        try {
-            Minesweeper minesweeper = new Minesweeper(difficulty);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Failed to start Minesweeper: " + e.getMessage(), 
-                                          "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        // try {
+        //     Minesweeper minesweeper = new Minesweeper(difficulty);
+        // } catch (Exception e) {
+        //     JOptionPane.showMessageDialog(null, "Failed to start Minesweeper: " + e.getMessage(), 
+        //                                   "Error", JOptionPane.ERROR_MESSAGE);
+        // }
+        new Minesweeper(difficulty);
     }
 
     // Helper method to style buttons
-    private static void styleButton(JButton button, Color backgroundColor) {
+    public static void styleButton(JButton button, Color backgroundColor) {
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setBackground(backgroundColor);
         button.setForeground(Color.WHITE);
