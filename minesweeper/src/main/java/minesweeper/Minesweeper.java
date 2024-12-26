@@ -2,6 +2,7 @@ package minesweeper;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
@@ -26,6 +27,7 @@ public class Minesweeper extends JPanel {
 
     JFrame frame = new JFrame("Minesweeper");
     JLabel textLabel = new JLabel();
+    JLabel timerLabel = new JLabel();
     JPanel textPanel = new JPanel();
     JPanel boardPanel = new JPanel();
 
@@ -39,7 +41,12 @@ public class Minesweeper extends JPanel {
     int tilesClicked = 0;
     boolean gameOver = false;
 
+    Timer timer;
+    int elapsedTime = 0; // in seconds
+    int highScore = Integer.MAX_VALUE; // in seconds
+
     public Minesweeper(int choice) {
+        loadHighScore();
         setupGame(choice);
         frame.setVisible(true);
     }
@@ -67,7 +74,7 @@ public class Minesweeper extends JPanel {
         boardWidth = numCols * tileSize;
         boardHeight = numRows * tileSize;
         board = new MineTile[numRows][numCols];
-        frame.setSize(boardWidth, boardHeight);
+        frame.setSize(boardWidth, boardHeight + 50); // Add space for timer
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -78,8 +85,14 @@ public class Minesweeper extends JPanel {
         textLabel.setText("Minesweeper: " + mineCount);
         textLabel.setOpaque(true);
 
+        timerLabel.setFont(new Font("Arial", Font.BOLD, 25));
+        timerLabel.setHorizontalAlignment(JLabel.CENTER);
+        timerLabel.setText("Time: 0s");
+        timerLabel.setOpaque(true);
+
         textPanel.setLayout(new BorderLayout());
-        textPanel.add(textLabel);
+        textPanel.add(textLabel, BorderLayout.NORTH);
+        textPanel.add(timerLabel, BorderLayout.SOUTH);
         frame.add(textPanel, BorderLayout.NORTH);
 
         boardPanel.setLayout(new GridLayout(numRows, numCols));
@@ -88,7 +101,10 @@ public class Minesweeper extends JPanel {
 
         setMines();
         setTreasures();
+
+        startTimer();
     }
+
     private void initializeBoard() {
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
@@ -139,9 +155,6 @@ public class Minesweeper extends JPanel {
         }
 
         frame.setVisible(true);
-
-        // setMines();
-        // setTreasures();
     }
 
     public void setMines() {
@@ -183,8 +196,6 @@ public class Minesweeper extends JPanel {
             treasure.setText("💎");
             treasure.setForeground(Color.decode("#FFD700"));
         }
-        // gameOver = true;
-        // textLabel.setText("Game Over!");
         gameOver("Game Over! You hit a bomb.");
     }
 
@@ -192,17 +203,18 @@ public class Minesweeper extends JPanel {
         tile.setText("💎");
         tile.setForeground(Color.decode("#FFD700"));  // Set diamond color (Gold)
         tile.removeMouseListener(tile.getMouseListeners()[0]);  // Remove click functionality
-        // tile.setEnabled(false);
-        // gameOver = true;
-        // textLabel.setText("You Win! Treasure Found!");
         gameOver("You found the treasure!");
     }
 
     public void gameOver(String message) {
-        JOptionPane.showMessageDialog(frame, message);
-        // int choice = JOptionPane.showOptionDialog(frame, "Choose difficulty:", "New Game", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new String[]{"Easy", "Medium", "Hard"}, "Easy");
-        // new Minesweeper(choice);
-        // frame.dispose();
+        timer.stop();
+        if (elapsedTime < highScore) {
+            highScore = elapsedTime;
+            saveHighScore();
+            JOptionPane.showMessageDialog(frame, message + "\nNew High Score: " + elapsedTime + "s");
+        } else {
+            JOptionPane.showMessageDialog(frame, message + "\nTime: " + elapsedTime + "s\nHigh Score: " + highScore + "s");
+        }
         SwingUtilities.invokeLater(() -> Main.createAndShowDifficultyDialog());
         frame.dispose();
     }
@@ -231,28 +243,22 @@ public class Minesweeper extends JPanel {
 
         if (minesFound > 0) {
             tile.setText(Integer.toString(minesFound));
-            // tile.setForeground(Color.decode("#F2F597"));
         } else {
             tile.setText("");
 
-            // top 3
-            checkMine(r - 1, c - 1); // top left
-            checkMine(r - 1, c); // top
-
-            // left and right
-            checkMine(r, c - 1); // left
-            checkMine(r, c + 1); // right
-
-            // bottom 3
-            checkMine(r + 1, c - 1); // bottom left
-            checkMine(r + 1, c); // bottom
-            checkMine(r + 1, c + 1); // bottom right
+            checkMine(r - 1, c - 1);
+            checkMine(r - 1, c);
+            checkMine(r - 1, c + 1);
+            checkMine(r, c - 1);
+            checkMine(r, c + 1);
+            checkMine(r + 1, c - 1);
+            checkMine(r + 1, c);
+            checkMine(r + 1, c + 1);
         }
 
         tile.setBackground(Color.decode("#1C0039")); // Set revealed tile color
 
         if (tilesClicked == numRows * numCols - mineList.size()) {
-            // gameOver = true;
             gameOver("Congratulations! You cleared all mines!");
         }
     }
@@ -266,5 +272,31 @@ public class Minesweeper extends JPanel {
         }
         return 0;
     }
-    
+
+    private void startTimer() {
+        timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                elapsedTime++;
+                timerLabel.setText("Time: " + elapsedTime + "s");
+            }
+        });
+        timer.start();
+    }
+
+    private void loadHighScore() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("highscore.txt"))) {
+            highScore = Integer.parseInt(reader.readLine());
+        } catch (IOException | NumberFormatException e) {
+            highScore = Integer.MAX_VALUE;
+        }
+    }
+
+    private void saveHighScore() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("highscore.txt"))) {
+            writer.write(Integer.toString(highScore));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
