@@ -40,6 +40,11 @@ public class Minesweeper extends JPanel {
     boolean gameOver = false;
 
     public Minesweeper(int choice) {
+        setupGame(choice);
+        frame.setVisible(true);
+    }
+
+    public void setupGame(int choice) {
         switch (choice) {
             case 0:
                 mineCount = 10;
@@ -79,8 +84,12 @@ public class Minesweeper extends JPanel {
 
         boardPanel.setLayout(new GridLayout(numRows, numCols));
         frame.add(boardPanel);
-        
+        initializeBoard();
 
+        setMines();
+        setTreasures();
+    }
+    private void initializeBoard() {
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
                 MineTile tile = new MineTile(r, c);
@@ -131,8 +140,8 @@ public class Minesweeper extends JPanel {
 
         frame.setVisible(true);
 
-        setMines();
-        setTreasures();
+        // setMines();
+        // setTreasures();
     }
 
     public void setMines() {
@@ -174,8 +183,9 @@ public class Minesweeper extends JPanel {
             treasure.setText("💎");
             treasure.setForeground(Color.decode("#FFD700"));
         }
-        gameOver = true;
-        textLabel.setText("Game Over!");
+        // gameOver = true;
+        // textLabel.setText("Game Over!");
+        gameOver("Game Over! You hit a bomb.");
     }
 
     public void revealTreasure(MineTile tile) {
@@ -183,8 +193,18 @@ public class Minesweeper extends JPanel {
         tile.setForeground(Color.decode("#FFD700"));  // Set diamond color (Gold)
         tile.removeMouseListener(tile.getMouseListeners()[0]);  // Remove click functionality
         // tile.setEnabled(false);
-        gameOver = true;
-        textLabel.setText("You Win! Treasure Found!");
+        // gameOver = true;
+        // textLabel.setText("You Win! Treasure Found!");
+        gameOver("You found the treasure!");
+    }
+
+    public void gameOver(String message) {
+        JOptionPane.showMessageDialog(frame, message);
+        // int choice = JOptionPane.showOptionDialog(frame, "Choose difficulty:", "New Game", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new String[]{"Easy", "Medium", "Hard"}, "Easy");
+        // new Minesweeper(choice);
+        // frame.dispose();
+        SwingUtilities.invokeLater(() -> Main.createAndShowDifficultyDialog());
+        frame.dispose();
     }
 
     public void checkMine(int r, int c) {
@@ -232,8 +252,8 @@ public class Minesweeper extends JPanel {
         tile.setBackground(Color.decode("#1C0039")); // Set revealed tile color
 
         if (tilesClicked == numRows * numCols - mineList.size()) {
-            gameOver = true;
-            textLabel.setText("Mines Cleared!");
+            // gameOver = true;
+            gameOver("Congratulations! You cleared all mines!");
         }
     }
 
@@ -248,3 +268,4 @@ public class Minesweeper extends JPanel {
     }
     
 }
+
