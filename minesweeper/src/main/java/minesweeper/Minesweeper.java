@@ -46,7 +46,7 @@ public class Minesweeper extends JPanel {
     int highScore = Integer.MAX_VALUE; // in seconds
 
     public Minesweeper(int choice) {
-        loadHighScore();
+        loadHighScore(choice);
         setupGame(choice);
         frame.setVisible(true);
     }
@@ -58,11 +58,13 @@ public class Minesweeper extends JPanel {
                 numCols = 8;
                 break;
             case 1:
+                tileSize = 60;
+                emojisize = 40;
                 mineCount = 20;
                 numCols = 12;
                 break;
             case 2:
-                tileSize = 50;
+                tileSize = 48;
                 mineCount = 40;
                 numCols = 16;
                 emojisize = 30;
@@ -196,25 +198,31 @@ public class Minesweeper extends JPanel {
             treasure.setText("💎");
             treasure.setForeground(Color.decode("#FFD700"));
         }
-        gameOver("Game Over! You hit a bomb.");
+        gameOver("Game Over! You hit a bomb.", false);
     }
 
     public void revealTreasure(MineTile tile) {
         tile.setText("💎");
         tile.setForeground(Color.decode("#FFD700"));  // Set diamond color (Gold)
         tile.removeMouseListener(tile.getMouseListeners()[0]);  // Remove click functionality
-        gameOver("You found the treasure!");
+        gameOver("You found the treasure!", true);
     }
 
-    public void gameOver(String message) {
+    public void gameOver(String message, boolean win) {
         timer.stop();
-        if (elapsedTime < highScore) {
-            highScore = elapsedTime;
-            saveHighScore();
-            JOptionPane.showMessageDialog(frame, message + "\nNew High Score: " + elapsedTime + "s");
+
+        if (win) {
+            if (elapsedTime < highScore) {
+                highScore = elapsedTime;
+                saveHighScore(numCols == 8 ? 0 : numCols == 12 ? 1 : 2);  // Determine difficulty
+                JOptionPane.showMessageDialog(frame, message + "\nNew High Score: " + elapsedTime + "s");
+            } else {
+                JOptionPane.showMessageDialog(frame, message + "\nTime: " + elapsedTime + "s\nHigh Score: " + highScore + "s");
+            }
         } else {
             JOptionPane.showMessageDialog(frame, message + "\nTime: " + elapsedTime + "s\nHigh Score: " + highScore + "s");
         }
+
         SwingUtilities.invokeLater(() -> Main.createAndShowDifficultyDialog());
         frame.dispose();
     }
@@ -259,7 +267,7 @@ public class Minesweeper extends JPanel {
         tile.setBackground(Color.decode("#1C0039")); // Set revealed tile color
 
         if (tilesClicked == numRows * numCols - mineList.size()) {
-            gameOver("Congratulations! You cleared all mines!");
+            gameOver("Congratulations! You cleared all mines!", true);
         }
     }
 
@@ -284,19 +292,36 @@ public class Minesweeper extends JPanel {
         timer.start();
     }
 
-    private void loadHighScore() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("highscore.txt"))) {
+    private void loadHighScore(int difficulty) {
+        String filename = "highscore_" + getDifficultyName(difficulty) + ".txt";
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             highScore = Integer.parseInt(reader.readLine());
         } catch (IOException | NumberFormatException e) {
-            highScore = Integer.MAX_VALUE;
+            highScore = 0;
         }
     }
 
-    private void saveHighScore() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("highscore.txt"))) {
+    private void saveHighScore(int difficulty) {
+        String filename = "highscore_" + getDifficultyName(difficulty) + ".txt";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             writer.write(Integer.toString(highScore));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+// Helper method to get difficulty name
+    private String getDifficultyName(int difficulty) {
+        switch (difficulty) {
+            case 0:
+                return "easy";
+            case 1:
+                return "medium";
+            case 2:
+                return "hard";
+            default:
+                return "unknown";
+        }
+    }
+}
 }
