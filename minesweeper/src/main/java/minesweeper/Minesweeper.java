@@ -12,47 +12,139 @@ import javax.sound.sampled.*;
 
 public class Minesweeper extends JPanel {
     private class MineTile extends JButton {
-        int r;
-        int c;
+        private int r;
+        private int c;
 
         public MineTile(int r, int c) {
             this.r = r;
             this.c = c;
         }
+
+        public int getR() {
+            return r;
+        }
+
+        public void setR(int r) {
+            this.r = r;
+        }
+
+        public int getC() {
+            return c;
+        }
+
+        public void setC(int c) {
+            this.c = c;
+        }
+
     }
-
-    int tileSize = 70;
-    int numRows;
-    int numCols;
-    int boardWidth;
-    int boardHeight;
-    int emojisize = 40;
-
-    JFrame frame = new JFrame("Minesweeper");
-    JLabel textLabel = new JLabel();
-    JLabel timerLabel = new JLabel();
-    JPanel textPanel = new JPanel();
-    JPanel boardPanel = new JPanel();
-
-    int mineCount;
-    int treasureCount = 1;  // Number of treasures
-    MineTile[][] board;
-    ArrayList<MineTile> mineList;
-    ArrayList<MineTile> treasureList;
-    Random random = new Random();
-
-    int tilesClicked = 0;
-    boolean gameOver = false;
-
-    Timer timer;
-    int elapsedTime = 0; // in seconds
-    int highScore = Integer.MAX_VALUE; // in seconds
 
     public Minesweeper(int choice) {
         loadHighScore(choice);
         setupGame(choice);
         frame.setVisible(true);
     }
+    
+    private int tileSize = 70;
+    private int numRows;
+    private int numCols;
+    private int boardWidth;
+    private int boardHeight;
+    private int emojisize = 40;
+    private JFrame frame = new JFrame("Minesweeper");
+    private JLabel textLabel = new JLabel();
+    private JLabel timerLabel = new JLabel();
+    private JPanel textPanel = new JPanel();
+    private JPanel boardPanel = new JPanel();
+    private int mineCount;
+    private int treasureCount = 1;
+    private MineTile[][] board;
+    private ArrayList<MineTile> mineList;
+    private ArrayList<MineTile> treasureList;
+    private Random random = new Random();
+    private int tilesClicked = 0;
+    private boolean gameOver = false;
+    private Timer timer;
+    private int elapsedTime = 0;
+    private int highScore = Integer.MAX_VALUE;
+
+    public int getBoardWidth() {
+        return boardWidth;
+    } 
+    public int getBoardHeight() {
+        return boardWidth;
+    }
+    public int getTileSize() {
+        return tileSize;
+    }
+
+    public void setTileSize(int tileSize) {
+        this.tileSize = tileSize;
+    }
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public void setNumRows(int numRows) {
+        this.numRows = numRows;
+    }
+
+    public int getNumCols() {
+        return numCols;
+    }
+
+    public void setNumCols(int numCols) {
+        this.numCols = numCols;
+    }
+
+    public int getMineCount() {
+        return mineCount;
+    }
+
+    public void setMineCount(int mineCount) {
+        this.mineCount = mineCount;
+    }
+
+    public int getTreasureCount() {
+        return treasureCount;
+    }
+
+    public void setTreasureCount(int treasureCount) {
+        this.treasureCount = treasureCount;
+    }
+
+    public int getTilesClicked() {
+        return tilesClicked;
+    }
+
+    public void setTilesClicked(int tilesClicked) {
+        this.tilesClicked = tilesClicked;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
+    }
+
+    public int getElapsedTime() {
+        return elapsedTime;
+    }
+
+    public void setElapsedTime(int elapsedTime) {
+        this.elapsedTime = elapsedTime;
+    }
+
+    public int getHighScore() {
+        return highScore;
+    }
+
+    public void setHighScore(int highScore) {
+        this.highScore = highScore;
+    }
+
 
     public void setupGame(int choice) {
         switch (choice) {
@@ -80,7 +172,7 @@ public class Minesweeper extends JPanel {
         boardWidth = numCols * tileSize;
         boardHeight = numRows * tileSize;
         board = new MineTile[numRows][numCols];
-        frame.setSize(boardWidth, boardHeight + 50);
+        frame.setSize(getBoardWidth(), getBoardHeight() + 50);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
