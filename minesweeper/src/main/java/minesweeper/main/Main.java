@@ -1,4 +1,4 @@
-package minesweeper;
+package minesweeper.main;
 
 import javax.swing.*;
 import java.awt.*;
@@ -62,14 +62,9 @@ public class Main {
     }
 
     public static void startGame(JDialog dialog, int difficulty) {
+        System.out.println("Starting game with difficulty: " + difficulty);
         dialog.dispose();
-        // try {
-        //     Minesweeper minesweeper = new Minesweeper(difficulty);
-        // } catch (Exception e) {
-        //     JOptionPane.showMessageDialog(null, "Failed to start Minesweeper: " + e.getMessage(), 
-        //                                   "Error", JOptionPane.ERROR_MESSAGE);
-        // }
-        new Minesweeper(difficulty);
+        new GameBoard(difficulty).setup();
     }
 
     // Helper method to style buttons
