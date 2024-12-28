@@ -213,12 +213,13 @@ public class GameBoard {
         if (!isValidCell(r, c) || !board[r][c].getButton().isEnabled() || board[r][c] instanceof MineTile) {
             return;
         }
-    
+
         AbstractTile tile = board[r][c];
         tile.getButton().setEnabled(false);
         tilesClicked++;
-    
+
         int adjacentMines = countAdjacentMines(r, c);
+        System.out.println("Checking tile at (" + r + ", " + c + "), adjacent mines: " + adjacentMines);
         if (adjacentMines > 0) {
             // Show number with styling
             tile.getButton().setText(String.valueOf(adjacentMines));
@@ -238,13 +239,13 @@ public class GameBoard {
                 }
             }
         }
-    
+
         // Check win condition
         if (tilesClicked == numRows * numCols - mineList.size()) {
             gameOver("Congratulations! You cleared all mines!", true);
         }
     }
-    
+
     public int countAdjacentMines(int r, int c) {
         int count = 0;
         for (int dr = -1; dr <= 1; dr++) {
@@ -257,11 +258,11 @@ public class GameBoard {
         }
         return count;
     }
-    
+
     private boolean isValidCell(int r, int c) {
         return r >= 0 && r < numRows && c >= 0 && c < numCols;
     }
-    
+
     private Color getNumberColor(int number) {
         switch (number) {
             case 1: return Color.BLUE;
@@ -388,5 +389,4 @@ public class GameBoard {
     public int getNumCols() {
         return numCols;
     }
-
 }

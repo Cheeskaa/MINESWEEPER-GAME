@@ -22,6 +22,9 @@ public class EmptyTile extends AbstractTile {
         button.setEnabled(false);
         button.setBackground(REVEALED_COLOR);
         
+        // Debugging statement
+        System.out.println("EmptyTile clicked at (" + r + ", " + c + ")");
+        
         // Use GameBoard's checkMine method to handle adjacency and flood fill
         game.checkMine(r, c);
     }
