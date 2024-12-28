@@ -1,4 +1,4 @@
-package minesweeper;
+//package minesweeper;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -8,9 +8,7 @@ import java.util.Random;
 import javax.swing.*;
 import javax.sound.sampled.*;
 
-
-
-public class Minesweeper extends JPanel implements GameInterface{
+public class Minesweeper extends JPanel {
     private class MineTile extends JButton {
         private int r;
         private int c;
@@ -20,28 +18,13 @@ public class Minesweeper extends JPanel implements GameInterface{
             this.c = c;
         }
 
-        public int getR() {
+        public int getRow() {
             return r;
         }
 
-        public void setR(int r) {
-            this.r = r;
-        }
-
-        public int getC() {
+        public int getCol() {
             return c;
         }
-
-        public void setC(int c) {
-            this.c = c;
-        }
-
-    }
-
-    public Minesweeper(int choice) {
-        loadHighScore(choice);
-        setupGame(choice);
-        frame.setVisible(true);
     }
 
     private int tileSize = 70;
@@ -50,103 +33,34 @@ public class Minesweeper extends JPanel implements GameInterface{
     private int boardWidth;
     private int boardHeight;
     private int emojisize = 40;
+
     private JFrame frame = new JFrame("Minesweeper");
     private JLabel textLabel = new JLabel();
     private JLabel timerLabel = new JLabel();
     private JPanel textPanel = new JPanel();
     private JPanel boardPanel = new JPanel();
+
     private int mineCount;
-    private int treasureCount = 1;
+    private int treasureCount = 1; // Number of treasures
     private MineTile[][] board;
     private ArrayList<MineTile> mineList;
     private ArrayList<MineTile> treasureList;
     private Random random = new Random();
+
     private int tilesClicked = 0;
     private boolean gameOver = false;
+
     private Timer timer;
-    private int elapsedTime = 0;
-    private int highScore = Integer.MAX_VALUE;
+    private int elapsedTime = 0; // in seconds
+    private int highScore = Integer.MAX_VALUE; // in seconds
 
-    public int getBoardWidth() {
-        return boardWidth;
-    } 
-    public int getBoardHeight() {
-        return boardWidth;
-    }
-    public int getTileSize() {
-        return tileSize;
+    public Minesweeper(int choice) {
+        loadHighScore(choice);
+        setupGame(choice);
+        frame.setVisible(true);
     }
 
-    public void setTileSize(int tileSize) {
-        this.tileSize = tileSize;
-    }
-
-    public int getNumRows() {
-        return numRows;
-    }
-
-    public void setNumRows(int numRows) {
-        this.numRows = numRows;
-    }
-
-    public int getNumCols() {
-        return numCols;
-    }
-
-    public void setNumCols(int numCols) {
-        this.numCols = numCols;
-    }
-
-    public int getMineCount() {
-        return mineCount;
-    }
-
-    public void setMineCount(int mineCount) {
-        this.mineCount = mineCount;
-    }
-
-    public int getTreasureCount() {
-        return treasureCount;
-    }
-
-    public void setTreasureCount(int treasureCount) {
-        this.treasureCount = treasureCount;
-    }
-
-    public int getTilesClicked() {
-        return tilesClicked;
-    }
-
-    public void setTilesClicked(int tilesClicked) {
-        this.tilesClicked = tilesClicked;
-    }
-
-    public boolean isGameOver() {
-        return gameOver;
-    }
-
-    public void setGameOver(boolean gameOver) {
-        this.gameOver = gameOver;
-    }
-
-    public int getElapsedTime() {
-        return elapsedTime;
-    }
-
-    public void setElapsedTime(int elapsedTime) {
-        this.elapsedTime = elapsedTime;
-    }
-
-    public int getHighScore() {
-        return highScore;
-    }
-
-    public void setHighScore(int highScore) {
-        this.highScore = highScore;
-    }
-
-    @Override
-    public void setupGame(int choice) {
+    private void setupGame(int choice) {
         switch (choice) {
             case 0:
                 mineCount = 10;
@@ -172,66 +86,55 @@ public class Minesweeper extends JPanel implements GameInterface{
         boardWidth = numCols * tileSize;
         boardHeight = numRows * tileSize;
         board = new MineTile[numRows][numCols];
-        frame.setSize(getBoardWidth(), getBoardHeight() + 50);
+        frame.setSize(boardWidth, boardHeight + 50);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
-    
+
+        setupUI();
+        initializeBoard();
+
+        setMines();
+        setTreasures();
+
+        startTimer();
+    }
+
+    private void setupUI() {
         // Title area styling
         textLabel.setFont(new Font("Arial", Font.BOLD, 30));
         textLabel.setHorizontalAlignment(JLabel.CENTER);
         textLabel.setText("Minesweeper: " + mineCount);
         textLabel.setOpaque(true);
         textLabel.setBackground(Color.decode("#8B0000")); // Dark red background
-        textLabel.setForeground(Color.WHITE);             // White text color
+        textLabel.setForeground(Color.WHITE); // White text color
         textLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3)); // Black border
-    
+
         timerLabel.setFont(new Font("Arial", Font.BOLD, 25));
         timerLabel.setHorizontalAlignment(JLabel.CENTER);
         timerLabel.setText("Time: 0s");
         timerLabel.setOpaque(true);
-    
+
         textPanel.setLayout(new BorderLayout());
         textPanel.add(textLabel, BorderLayout.NORTH);
         textPanel.add(timerLabel, BorderLayout.SOUTH);
         frame.add(textPanel, BorderLayout.NORTH);
-    
+
         boardPanel.setLayout(new GridLayout(numRows, numCols));
         frame.add(boardPanel);
-        initializeBoard();
-    
-        setMines();
-        setTreasures();
-    
-        startTimer();
-    }
-    
-    public static void startGame(JDialog dialog, int difficulty) {
-        dialog.dispose();
-        // try {
-        //     Minesweeper minesweeper = new Minesweeper(difficulty);
-        // } catch (Exception e) {
-        //     JOptionPane.showMessageDialog(null, "Failed to start Minesweeper: " + e.getMessage(), 
-        //                                   "Error", JOptionPane.ERROR_MESSAGE);
-        // }
-        new Minesweeper(difficulty);
     }
 
-    @Override
-    public void initializeBoard() {
+    private void initializeBoard() {
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
                 MineTile tile = new MineTile(r, c);
                 board[r][c] = tile;
-                //alternate colors
-                if ((r + c) % 2 == 0) {
-                    tile.setBackground(Color.decode("#2A0055"));
-                } else {
-                    tile.setBackground(Color.decode("#47008E"));
-                }
 
-                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));  //gridlines, 2px thick
+                // Alternate colors
+                tile.setBackground((r + c) % 2 == 0 ? Color.decode("#2A0055") : Color.decode("#47008E"));
+
+                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2)); // Gridlines, 2px thick
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
                 tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
@@ -251,7 +154,7 @@ public class Minesweeper extends JPanel implements GameInterface{
                                 } else if (treasureList.contains(tile)) {
                                     revealTreasure(tile);
                                 } else {
-                                    checkMine(tile.r, tile.c);
+                                    checkMine(tile.getRow(), tile.getCol());
                                 }
                             }
                         } else if (e.getButton() == MouseEvent.BUTTON3) {
@@ -271,8 +174,7 @@ public class Minesweeper extends JPanel implements GameInterface{
         frame.setVisible(true);
     }
 
-    @Override
-    public void setMines() {
+    private void setMines() {
         mineList = new ArrayList<>();
         int mineLeft = mineCount;
         while (mineLeft > 0) {
@@ -287,8 +189,7 @@ public class Minesweeper extends JPanel implements GameInterface{
         }
     }
 
-    @Override
-    public void setTreasures() {
+    private void setTreasures() {
         treasureList = new ArrayList<>();
         int treasureLeft = treasureCount;
         while (treasureLeft > 0) {
@@ -352,7 +253,6 @@ public class Minesweeper extends JPanel implements GameInterface{
         gameOver("You found the treasure!", true);
     }
 
-    @Override
     public void gameOver(String message, boolean win) {
         timer.stop();
 
@@ -370,7 +270,7 @@ public class Minesweeper extends JPanel implements GameInterface{
         frame.dispose();
     }
 
-    public void showCustomGameOverDialog(String message, String scoreMessage, boolean win) {
+    private void showCustomGameOverDialog(String message, String scoreMessage, boolean win) {
         JFrame frame = new JFrame("Game Over");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -482,8 +382,7 @@ public class Minesweeper extends JPanel implements GameInterface{
         return 0;
     }
 
-    @Override
-    public void startTimer() {
+    private void startTimer() {
         timer = new Timer(1000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -494,8 +393,7 @@ public class Minesweeper extends JPanel implements GameInterface{
         timer.start();
     }
 
-    @Override
-    public void loadHighScore(int difficulty) {
+    private void loadHighScore(int difficulty) {
         String filename = "highscore_" + getDifficultyName(difficulty) + ".txt";
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             highScore = Integer.parseInt(reader.readLine());
@@ -504,8 +402,7 @@ public class Minesweeper extends JPanel implements GameInterface{
         }
     }
 
-    @Override
-    public void saveHighScore(int difficulty) {
+    private void saveHighScore(int difficulty) {
         String filename = "highscore_" + getDifficultyName(difficulty) + ".txt";
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             writer.write(Integer.toString(highScore));
@@ -542,4 +439,3 @@ public class Minesweeper extends JPanel implements GameInterface{
         }
     }
 }
-
