@@ -54,20 +54,6 @@ public class Minesweeper extends JPanel {
         frame.setVisible(true);
     }
 
-    private void playBombSound() {
-    try {
-        // Specify the sound file (e.g., "bomb_explosion.wav")
-        File soundFile = new File("bomb_sound.wav"); // Make sure the path is correct
-        AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
-        Clip clip = AudioSystem.getClip();
-        clip.open(audioStream);
-        clip.start(); // Play the sound
-    } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-        e.printStackTrace(); // Handle any errors
-    }
-}
-
-
     public void setupGame(int choice) {
         switch (choice) {
             case 0:
@@ -128,21 +114,20 @@ public class Minesweeper extends JPanel {
     
         startTimer();
     }
-    
 
     private void initializeBoard() {
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
                 MineTile tile = new MineTile(r, c);
                 board[r][c] = tile;
-
+                //alternate colors
                 if ((r + c) % 2 == 0) {
                     tile.setBackground(Color.decode("#2A0055"));
                 } else {
                     tile.setBackground(Color.decode("#47008E"));
                 }
 
-                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));  // White gridlines, 2px thick
+                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));  //gridlines, 2px thick
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
                 tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
@@ -234,10 +219,9 @@ public class Minesweeper extends JPanel {
     
                 step++;
     
-                // Stop the animation after 4 steps
                 if (step > 3) {
                     ((Timer) e.getSource()).stop();
-                    showEndScreen(); // Show game-over message after animation ends
+                    showEndScreen();
                 }
             }
         });
@@ -248,143 +232,93 @@ public class Minesweeper extends JPanel {
     public void showEndScreen() {
         for (MineTile treasure : treasureList) {
             treasure.setText("💎");
-            treasure.setForeground(Color.decode("#FFD700")); // Gold for treasures
+            treasure.setForeground(Color.decode("#FFD700")); // Gold for treasure
         }
         playBombSound();
         gameOver("Game Over! You hit a bomb.", false);
         
     }
-    
 
     public void revealTreasure(MineTile tile) {
         tile.setText("💎");
-        tile.setForeground(Color.decode("#FFD700"));  // Set diamond color (Gold)
+        tile.setForeground(Color.decode("#FFD700"));
         tile.removeMouseListener(tile.getMouseListeners()[0]);  // Remove click functionality
         gameOver("You found the treasure!", true);
     }
 
     public void gameOver(String message, boolean win) {
         timer.stop();
-    
-        // Create a styled JPanel for the popup
-        JPanel messagePanel = new JPanel();
-        messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
-        messagePanel.setBackground(win ? Color.decode("#4CAF50") : Color.decode("#F44336")); // Green for win, red for loss
-        messagePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-    
-        // Set font that supports emojis
-        Font emojiFont = new Font("Segoe UI Emoji", Font.PLAIN, 24);
-        if (!isFontAvailable(emojiFont)) {
-            emojiFont = new Font("Arial", Font.PLAIN, 24); // Fallback to Arial
+
+        String scoreMessage = "Time: " + elapsedTime + "s\nHigh Score: " + highScore + "s";
+
+        if (win) {
+            if (elapsedTime < highScore) {
+                highScore = elapsedTime;
+                saveHighScore(numCols == 8 ? 0 : numCols == 12 ? 1 : 2);
+                scoreMessage = "New High Score: " + elapsedTime + "s";
+            }
         }
-    
-        JLabel titleLabel = new JLabel(win ? "🎉 Victory!" : "💥 Game Over");
-        titleLabel.setFont(emojiFont);
-        titleLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
-        titleLabel.setForeground(Color.WHITE);
-    
-        JLabel messageLabel = new JLabel("<html><center>" + message.replace("\n", "<br>") + "</center></html>");
-        messageLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-        messageLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
-        messageLabel.setForeground(Color.WHITE);
-    
-        messagePanel.add(titleLabel);
-        messagePanel.add(Box.createRigidArea(new Dimension(0, 10))); // Spacing
-        messagePanel.add(messageLabel);
-    
-        int option = JOptionPane.showConfirmDialog(
-            frame,
-            messagePanel,
-            "Game Over",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
-    
-        // Handle restart or close based on user interaction
-        if (option == JOptionPane.OK_OPTION) {
-            SwingUtilities.invokeLater(() -> Main.createAndShowDifficultyDialog());
-        }
-    
+
+        showCustomGameOverDialog(message, scoreMessage, win);
         frame.dispose();
     }
-    
-    // Helper Method to Check Font Availability
-    private boolean isFontAvailable(Font font) {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        for (Font availableFont : ge.getAllFonts()) {
-            if (availableFont.getName().equals(font.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    
-    private void showAnimatedPopup(String message) {
-        // Create a modal dialog for the animation
+
+    private void showCustomGameOverDialog(String message, String scoreMessage, boolean win) {
+        JFrame frame = new JFrame("Game Over");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Custom panel same as difficulty dialog
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.setBackground(Color.decode("#27214f"));
+
+        JLabel label = new JLabel(message, SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.BOLD, 18));
+        label.setForeground(Color.WHITE);
+        label.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
+        panel.add(label, BorderLayout.NORTH);
+
+        JLabel scoreLabel = new JLabel("<html>" + scoreMessage.replace("\n", "<br>") + "</html>", SwingConstants.CENTER);
+        scoreLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        scoreLabel.setForeground(Color.WHITE);
+        scoreLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
+        panel.add(scoreLabel, BorderLayout.CENTER);
+
+        // Button Panel (Retry and Quit)
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        buttonPanel.setBackground(Color.decode("#27214f"));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JButton retryButton = new JButton("Retry");
+        JButton quitButton = new JButton("Quit");
+
+        Main.styleButton(retryButton, Color.GREEN);
+        Main.styleButton(quitButton, Color.RED);
+
+        buttonPanel.add(retryButton);
+        buttonPanel.add(quitButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
         JDialog dialog = new JDialog(frame, "Game Over", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setSize(400, 250);
         dialog.setLayout(new BorderLayout());
-    
-        // Panel to display the animated content
-        JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(Color.BLACK);
-    
-        JLabel messageLabel = new JLabel(message, JLabel.CENTER);
-        messageLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        messageLabel.setForeground(Color.WHITE);
-    
-        JLabel bombLabel = new JLabel("", JLabel.CENTER);
-        bombLabel.setFont(new Font("Arial Unicode MS", Font.PLAIN, 60));
-    
-        contentPanel.add(messageLabel, BorderLayout.NORTH);
-        contentPanel.add(bombLabel, BorderLayout.CENTER);
-    
-        // OK button
-        JButton okButton = new JButton("OK");
-        okButton.setFont(new Font("Arial", Font.BOLD, 16));
-        okButton.setBackground(Color.decode("#8B0000")); // Dark red background
-        okButton.setForeground(Color.WHITE);
-        okButton.setFocusPainted(false);
-        okButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        okButton.addActionListener(e -> dialog.dispose());
-    
-        // Panel for the button
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(Color.BLACK);
-        buttonPanel.add(okButton);
-    
-        dialog.add(contentPanel, BorderLayout.CENTER);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-    
-        dialog.setSize(400, 300);
-        dialog.setLocationRelativeTo(frame);
-    
-        // Animation logic
-        Timer popupTimer = new Timer(300, null); // Update every 300ms
-        String[] colors = {"red", "orange", "yellow", "black"};
-        int[] step = {0}; // Track animation step
-    
-        popupTimer.addActionListener(e -> {
-            bombLabel.setText("<html><span style='color:" + colors[step[0]] + "'>💣</span></html>");
-            step[0]++;
-            if (step[0] >= colors.length) {
-                step[0] = 0; // Reset to loop the animation
-            }
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.setLocationRelativeTo(null);
+
+        retryButton.addActionListener(e -> {
+            dialog.dispose();
+            SwingUtilities.invokeLater(() -> Main.createAndShowDifficultyDialog());
         });
-    
-        popupTimer.start();
-    
-        // Show the dialog
+
+        quitButton.addActionListener(e -> {
+            dialog.dispose();
+            System.exit(0);
+        });
+
         dialog.setVisible(true);
-    
-        // Stop the timer when dialog is closed
-        popupTimer.stop();
+        frame.dispose();
     }
-    
-    
-    
-    
-    
 
     public void checkMine(int r, int c) {
         if (r < 0 || r >= numRows || c < 0 || c >= numCols) {
@@ -426,8 +360,6 @@ public class Minesweeper extends JPanel {
 
         tile.setBackground(Color.decode("#1C0039")); // Set revealed tile color
 
-       
-
         if (tilesClicked == numRows * numCols - mineList.size()) {
             gameOver("Congratulations! You cleared all mines!", true);
         }
@@ -442,7 +374,6 @@ public class Minesweeper extends JPanel {
         }
         return 0;
     }
-
 
     private void startTimer() {
         timer = new Timer(1000, new ActionListener() {
@@ -473,6 +404,8 @@ public class Minesweeper extends JPanel {
         }
     }
 
+
+
 // Helper method to get difficulty name
     private String getDifficultyName(int difficulty) {
         switch (difficulty) {
@@ -484,6 +417,18 @@ public class Minesweeper extends JPanel {
                 return "hard";
             default:
                 return "unknown";
+        }
+    }
+
+    private void playBombSound() {
+        try {
+            File soundFile = new File("bomb_sound.wav");
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
         }
     }
 }
