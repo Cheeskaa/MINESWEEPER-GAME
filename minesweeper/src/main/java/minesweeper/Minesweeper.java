@@ -1,47 +1,20 @@
-package minesweeper;
-
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
-import javax.swing.*;
 import javax.sound.sampled.*;
+import path.to.Tile;
 
+public class Minesweeper extends JPanel implements GameInterface {
 
+    
 
-public class Minesweeper extends JPanel implements GameInterface{
-    private class MineTile extends JButton {
-        private int r;
-        private int c;
-
+    private class MineTile extends Tile {
         public MineTile(int r, int c) {
-            this.r = r;
-            this.c = c;
+            super(r, c);
         }
-
-        public int getR() {
-            return r;
-        }
-
-        public void setR(int r) {
-            this.r = r;
-        }
-
-        public int getC() {
-            return c;
-        }
-
-        public void setC(int c) {
-            this.c = c;
-        }
-
-    }
-
-    public Minesweeper(int choice) {
-        loadHighScore(choice);
-        setupGame(choice);
-        frame.setVisible(true);
     }
 
     private int tileSize = 70;
@@ -57,9 +30,9 @@ public class Minesweeper extends JPanel implements GameInterface{
     private JPanel boardPanel = new JPanel();
     private int mineCount;
     private int treasureCount = 1;
-    private MineTile[][] board;
-    private ArrayList<MineTile> mineList;
-    private ArrayList<MineTile> treasureList;
+    private Tile[][] board;
+    private ArrayList<Tile> mineList;
+    private ArrayList<Tile> treasureList;
     private Random random = new Random();
     private int tilesClicked = 0;
     private boolean gameOver = false;
@@ -67,111 +40,104 @@ public class Minesweeper extends JPanel implements GameInterface{
     private int elapsedTime = 0;
     private int highScore = Integer.MAX_VALUE;
 
+    // Constructor and other methods
+
     public int getBoardWidth() {
         return boardWidth;
-    } 
+    }
+
     public int getBoardHeight() {
-        return boardWidth;
-    }
-    public int getTileSize() {
-        return tileSize;
+        return boardHeight;
     }
 
-    public void setTileSize(int tileSize) {
-        this.tileSize = tileSize;
+    public Minesweeper(int choice) {
+        loadHighScore(choice);
+        setupGame(choice);
+        frame.setVisible(true);
     }
 
-    public int getNumRows() {
-        return numRows;
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> createAndShowDifficultyDialog());
     }
 
-    public void setNumRows(int numRows) {
-        this.numRows = numRows;
+    public static void createAndShowDifficultyDialog() {
+        JFrame frame = new JFrame("Difficulty");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Create a custom panel for the dialog
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.setBackground(Color.decode("#27214f"));
+
+        // Add a title label
+        JLabel label = new JLabel("Choose a Difficulty", SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.BOLD, 18));
+        label.setForeground(Color.pink);
+        label.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        panel.add(label, BorderLayout.NORTH);
+
+        // Create a button panel
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 10));
+        buttonPanel.setBackground(Color.decode("#27214f"));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Create buttons
+        JButton easyButton = new JButton("Easy");
+        JButton mediumButton = new JButton("Medium");
+        JButton hardButton = new JButton("Hard");
+
+        styleButton(easyButton, Color.GREEN);
+        styleButton(mediumButton, Color.ORANGE);
+        styleButton(hardButton, Color.RED);
+
+        buttonPanel.add(easyButton);
+        buttonPanel.add(mediumButton);
+        buttonPanel.add(hardButton);
+
+        panel.add(buttonPanel, BorderLayout.CENTER);
+
+        // Create and configure a dialog
+        JDialog dialog = new JDialog(frame, "Difficulty", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setSize(400, 200);
+        dialog.setLayout(new BorderLayout());
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.setLocationRelativeTo(null);
+
+        // Add action listeners
+        easyButton.addActionListener(e -> startGame(dialog, 0));
+        mediumButton.addActionListener(e -> startGame(dialog, 1));
+        hardButton.addActionListener(e -> startGame(dialog, 2));
+
+        dialog.setVisible(true);
+        frame.dispose();
     }
 
-    public int getNumCols() {
-        return numCols;
+    public static void startGame(JDialog dialog, int difficulty) {
+        dialog.dispose();
+        new Minesweeper(difficulty);
     }
 
-    public void setNumCols(int numCols) {
-        this.numCols = numCols;
-    }
-
-    public int getMineCount() {
-        return mineCount;
-    }
-
-    public void setMineCount(int mineCount) {
-        this.mineCount = mineCount;
-    }
-
-    public int getTreasureCount() {
-        return treasureCount;
-    }
-
-    public void setTreasureCount(int treasureCount) {
-        this.treasureCount = treasureCount;
-    }
-
-    public int getTilesClicked() {
-        return tilesClicked;
-    }
-
-    public void setTilesClicked(int tilesClicked) {
-        this.tilesClicked = tilesClicked;
-    }
-
-    public boolean isGameOver() {
-        return gameOver;
-    }
-
-    public void setGameOver(boolean gameOver) {
-        this.gameOver = gameOver;
-    }
-
-    public int getElapsedTime() {
-        return elapsedTime;
-    }
-
-    public void setElapsedTime(int elapsedTime) {
-        this.elapsedTime = elapsedTime;
-    }
-
-    public int getHighScore() {
-        return highScore;
-    }
-
-    public void setHighScore(int highScore) {
-        this.highScore = highScore;
+    public static void styleButton(JButton button, Color backgroundColor) {
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setBackground(backgroundColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
     }
 
     @Override
     public void setupGame(int choice) {
         switch (choice) {
-            case 0:
-                mineCount = 10;
-                numCols = 8;
-                break;
-            case 1:
-                tileSize = 60;
-                emojisize = 40;
-                mineCount = 20;
-                numCols = 12;
-                break;
-            case 2:
-                tileSize = 48;
-                mineCount = 40;
-                numCols = 16;
-                emojisize = 30;
-                break;
-            default:
-                break;
+            case 0: mineCount = 10; numCols = 8; break;
+            case 1: tileSize = 60; emojisize = 40; mineCount = 20; numCols = 12; break;
+            case 2: tileSize = 48; mineCount = 40; numCols = 16; emojisize = 30; break;
+            default: break;
         }
-
         numRows = numCols;
         boardWidth = numCols * tileSize;
         boardHeight = numRows * tileSize;
-        board = new MineTile[numRows][numCols];
+        board = new Tile[numRows][numCols];
         frame.setSize(getBoardWidth(), getBoardHeight() + 50);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
@@ -179,14 +145,25 @@ public class Minesweeper extends JPanel implements GameInterface{
         frame.setLayout(new BorderLayout());
     
         // Title area styling
+        setupLabels();
+        setupBoardPanel();
+        initializeBoard();
+    
+        setMines();
+        setTreasures();
+    
+        startTimer();
+    }
+
+    private void setupLabels() {
         textLabel.setFont(new Font("Arial", Font.BOLD, 30));
         textLabel.setHorizontalAlignment(JLabel.CENTER);
         textLabel.setText("Minesweeper: " + mineCount);
         textLabel.setOpaque(true);
-        textLabel.setBackground(Color.decode("#8B0000")); // Dark red background
-        textLabel.setForeground(Color.WHITE);             // White text color
-        textLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3)); // Black border
-    
+        textLabel.setBackground(Color.decode("#8B0000"));
+        textLabel.setForeground(Color.WHITE);
+        textLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+        
         timerLabel.setFont(new Font("Arial", Font.BOLD, 25));
         timerLabel.setHorizontalAlignment(JLabel.CENTER);
         timerLabel.setText("Time: 0s");
@@ -196,79 +173,64 @@ public class Minesweeper extends JPanel implements GameInterface{
         textPanel.add(textLabel, BorderLayout.NORTH);
         textPanel.add(timerLabel, BorderLayout.SOUTH);
         frame.add(textPanel, BorderLayout.NORTH);
-    
+    }
+
+    private void setupBoardPanel() {
         boardPanel.setLayout(new GridLayout(numRows, numCols));
         frame.add(boardPanel);
-        initializeBoard();
-    
-        setMines();
-        setTreasures();
-    
-        startTimer();
-    }
-    
-    public static void startGame(JDialog dialog, int difficulty) {
-        dialog.dispose();
-        // try {
-        //     Minesweeper minesweeper = new Minesweeper(difficulty);
-        // } catch (Exception e) {
-        //     JOptionPane.showMessageDialog(null, "Failed to start Minesweeper: " + e.getMessage(), 
-        //                                   "Error", JOptionPane.ERROR_MESSAGE);
-        // }
-        new Minesweeper(difficulty);
     }
 
     @Override
     public void initializeBoard() {
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
-                MineTile tile = new MineTile(r, c);
+                Tile tile = new MineTile(r, c);
                 board[r][c] = tile;
-                //alternate colors
-                if ((r + c) % 2 == 0) {
-                    tile.setBackground(Color.decode("#2A0055"));
-                } else {
-                    tile.setBackground(Color.decode("#47008E"));
-                }
-
-                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));  //gridlines, 2px thick
-                tile.setFocusable(false);
-                tile.setMargin(new Insets(0, 0, 0, 0));
-                tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
-                tile.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mousePressed(MouseEvent e) {
-                        if (gameOver) {
-                            return;
-                        }
-
-                        MineTile tile = (MineTile) e.getSource();
-
-                        if (e.getButton() == MouseEvent.BUTTON1) {
-                            if (tile.getText().equals("")) {
-                                if (mineList.contains(tile)) {
-                                    revealMines();
-                                } else if (treasureList.contains(tile)) {
-                                    revealTreasure(tile);
-                                } else {
-                                    checkMine(tile.r, tile.c);
-                                }
-                            }
-                        } else if (e.getButton() == MouseEvent.BUTTON3) {
-                            if (tile.getText().equals("") && tile.isEnabled()) {
-                                tile.setText("🚩");
-                                tile.setForeground(Color.RED);
-                            } else if (tile.getText().equals("🚩")) {
-                                tile.setText("");
-                            }
-                        }
-                    }
-                });
+                setTileBackground(tile, r, c);
+                setupTileActions(tile);
                 boardPanel.add(tile);
             }
         }
-
         frame.setVisible(true);
+    }
+
+    private void setTileBackground(Tile tile, int r, int c) {
+        if ((r + c) % 2 == 0) {
+            tile.setBackground(Color.decode("#2A0055"));
+        } else {
+            tile.setBackground(Color.decode("#47008E"));
+        }
+        tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));
+        tile.setFocusable(false);
+        tile.setMargin(new Insets(0, 0, 0, 0));
+        tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
+    }
+
+    private void setupTileActions(Tile tile) {
+        tile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (gameOver) return;
+
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    handleLeftClick(tile);
+                } else if (e.getButton() == MouseEvent.BUTTON3) {
+                    handleRightClick(tile);
+                }
+            }
+        });
+    }
+
+    private void handleLeftClick(Tile tile) {
+        if (tile.getText().equals("")) {
+            if (mineList.contains(tile)) {
+                revealMines();
+            } else if (treasureList.contains(tile)) {
+                revealTreasure(tile);
+            } else {
+                checkMine(tile.getR(), tile.getC());
+            }
+        }
     }
 
     @Override
