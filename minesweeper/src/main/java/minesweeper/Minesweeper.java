@@ -120,14 +120,14 @@ public class Minesweeper extends JPanel {
             for (int c = 0; c < numCols; c++) {
                 MineTile tile = new MineTile(r, c);
                 board[r][c] = tile;
-
+                //alternate colors
                 if ((r + c) % 2 == 0) {
                     tile.setBackground(Color.decode("#2A0055"));
                 } else {
                     tile.setBackground(Color.decode("#47008E"));
                 }
 
-                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));  // White gridlines, 2px thick
+                tile.setBorder(BorderFactory.createLineBorder(Color.decode("#1C0039"), 2));  //gridlines, 2px thick
                 tile.setFocusable(false);
                 tile.setMargin(new Insets(0, 0, 0, 0));
                 tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, emojisize));
@@ -219,10 +219,9 @@ public class Minesweeper extends JPanel {
     
                 step++;
     
-                // Stop the animation after 4 steps
                 if (step > 3) {
                     ((Timer) e.getSource()).stop();
-                    showEndScreen(); // Show game-over message after animation ends
+                    showEndScreen();
                 }
             }
         });
@@ -233,7 +232,7 @@ public class Minesweeper extends JPanel {
     public void showEndScreen() {
         for (MineTile treasure : treasureList) {
             treasure.setText("💎");
-            treasure.setForeground(Color.decode("#FFD700")); // Gold for treasures
+            treasure.setForeground(Color.decode("#FFD700")); // Gold for treasure
         }
         playBombSound();
         gameOver("Game Over! You hit a bomb.", false);
@@ -242,7 +241,7 @@ public class Minesweeper extends JPanel {
 
     public void revealTreasure(MineTile tile) {
         tile.setText("💎");
-        tile.setForeground(Color.decode("#FFD700"));  // Set diamond color (Gold)
+        tile.setForeground(Color.decode("#FFD700"));
         tile.removeMouseListener(tile.getMouseListeners()[0]);  // Remove click functionality
         gameOver("You found the treasure!", true);
     }
@@ -268,19 +267,17 @@ public class Minesweeper extends JPanel {
         JFrame frame = new JFrame("Game Over");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Custom panel similar to difficulty dialog
+        // Custom panel same as difficulty dialog
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setBackground(Color.decode("#27214f"));
 
-        // Title Label (Win or Lose)
         JLabel label = new JLabel(message, SwingConstants.CENTER);
         label.setFont(new Font("Arial", Font.BOLD, 18));
         label.setForeground(Color.WHITE);
         label.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
         panel.add(label, BorderLayout.NORTH);
 
-        // Score Label
         JLabel scoreLabel = new JLabel("<html>" + scoreMessage.replace("\n", "<br>") + "</html>", SwingConstants.CENTER);
         scoreLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         scoreLabel.setForeground(Color.WHITE);
@@ -302,7 +299,6 @@ public class Minesweeper extends JPanel {
         buttonPanel.add(quitButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Dialog Configuration
         JDialog dialog = new JDialog(frame, "Game Over", true);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setSize(400, 250);
@@ -310,7 +306,6 @@ public class Minesweeper extends JPanel {
         dialog.add(panel, BorderLayout.CENTER);
         dialog.setLocationRelativeTo(null);
 
-        // Button Actions
         retryButton.addActionListener(e -> {
             dialog.dispose();
             SwingUtilities.invokeLater(() -> Main.createAndShowDifficultyDialog());
@@ -324,7 +319,6 @@ public class Minesweeper extends JPanel {
         dialog.setVisible(true);
         frame.dispose();
     }
-
 
     public void checkMine(int r, int c) {
         if (r < 0 || r >= numRows || c < 0 || c >= numCols) {
@@ -365,8 +359,6 @@ public class Minesweeper extends JPanel {
         }
 
         tile.setBackground(Color.decode("#1C0039")); // Set revealed tile color
-
-       
 
         if (tilesClicked == numRows * numCols - mineList.size()) {
             gameOver("Congratulations! You cleared all mines!", true);
@@ -414,8 +406,6 @@ public class Minesweeper extends JPanel {
 
 
 
-
-
 // Helper method to get difficulty name
     private String getDifficultyName(int difficulty) {
         switch (difficulty) {
@@ -432,14 +422,13 @@ public class Minesweeper extends JPanel {
 
     private void playBombSound() {
         try {
-            // Specify the sound file (e.g., "bomb_explosion.wav")
-            File soundFile = new File("bomb_sound.wav"); // Make sure the path is correct
+            File soundFile = new File("bomb_sound.wav");
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);
-            clip.start(); // Play the sound
+            clip.start();
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            e.printStackTrace(); // Handle any errors
+            e.printStackTrace();
         }
     }
 }
