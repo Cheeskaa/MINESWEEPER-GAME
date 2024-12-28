@@ -1,51 +1,48 @@
 package minesweeper.model;
 
 import minesweeper.main.GameBoard;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class TileFactory {
     public static List<AbstractTile> createTiles(int difficulty, GameBoard game) {
+        int rows = game.getNumRows();
+        int cols = game.getNumCols();
         List<AbstractTile> tiles = new ArrayList<>();
-        int numRows = game.getNumRows();
-        int numCols = game.getNumCols();
-        int mineCount = getMineCount(difficulty);
-        int treasureCount = 1;
-
         Random random = new Random();
 
-        // Create mines
-        while (mineCount > 0) {
-            int r = random.nextInt(numRows);
-            int c = random.nextInt(numCols);
-            AbstractTile tile = new MineTile(r, c, game);
-            if (!tiles.contains(tile)) {
-                tiles.add(tile);
-                mineCount--;
+        // Create all empty tiles first
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                tiles.add(new EmptyTile(r, c, game));
             }
         }
 
-        // Create treasures
-        while (treasureCount > 0) {
-            int r = random.nextInt(numRows);
-            int c = random.nextInt(numCols);
-            AbstractTile tile = new TreasureTile(r, c, game);
-            if (!tiles.contains(tile)) {
-                tiles.add(tile);
-                treasureCount--;
-            }
+        // Add mines randomly
+        int mineCount = getMineCount(difficulty);
+        for (int i = 0; i < mineCount; i++) {
+            int index;
+            do {
+                index = random.nextInt(tiles.size());
+            } while (!(tiles.get(index) instanceof EmptyTile));
+            
+            int r = tiles.get(index).getRow();
+            int c = tiles.get(index).getCol();
+            tiles.set(index, new MineTile(r, c, game));
         }
 
-        // Create empty tiles
-        for (int r = 0; r < numRows; r++) {
-            for (int c = 0; c < numCols; c++) {
-                AbstractTile tile = new EmptyTile(r, c, game);
-                if (!tiles.contains(tile)) {
-                    tiles.add(tile);
-                }
-            }
+        // Add treasure randomly
+        int treasureCount = getTreasureCount(difficulty);
+        for (int i = 0; i < treasureCount; i++) {
+            int index;
+            do {
+                index = random.nextInt(tiles.size());
+            } while (!(tiles.get(index) instanceof EmptyTile));
+            
+            int r = tiles.get(index).getRow();
+            int c = tiles.get(index).getCol();
+            tiles.set(index, new TreasureTile(r, c, game));
         }
 
         return tiles;
@@ -53,10 +50,19 @@ public class TileFactory {
 
     private static int getMineCount(int difficulty) {
         switch (difficulty) {
-            case 0: return 10; // Easy
-            case 1: return 20; // Medium
-            case 2: return 40; // Hard
+            case 0: return 10;  // Easy
+            case 1: return 20;  // Medium
+            case 2: return 40;  // Hard
             default: return 10;
+        }
+    }
+
+    private static int getTreasureCount(int difficulty) {
+        switch (difficulty) {
+            case 0: return 1;  // Easy
+            case 1: return 2;  // Medium
+            case 2: return 3;  // Hard
+            default: return 1;
         }
     }
 }

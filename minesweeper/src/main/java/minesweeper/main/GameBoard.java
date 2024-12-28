@@ -4,8 +4,6 @@ import minesweeper.model.AbstractTile;
 import minesweeper.model.TileFactory;
 import minesweeper.model.TreasureTile;
 import minesweeper.model.MineTile;
-import minesweeper.util.TimerUtility;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
@@ -13,7 +11,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.sound.sampled.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -34,6 +31,15 @@ public class GameBoard {
     private boolean gameOver;
     private int highScore;
     private int mineCount;
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public int getNumCols() {
+        return numCols;
+    }
+
 
     public GameBoard(int difficulty) {
         if (difficulty < 0 || difficulty > 2) {
@@ -69,19 +75,14 @@ public class GameBoard {
         }
     }
 
-    public int getNumRows() {
-        return numRows;
-    }
-
-    public int getNumCols() {
-        return numCols;
-    }
-
     public void setup() {
         frame = new JFrame("Minesweeper");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
 
-        boardPanel = new JPanel(new GridLayout(numRows, numCols));
+        boardPanel = new JPanel();
+        boardPanel.setLayout(new GridLayout(numRows, numCols));
+
         initializeTiles();
 
         timerLabel = new JLabel("Time: 0s");
@@ -100,17 +101,40 @@ public class GameBoard {
 
     private void initializeTiles() {
         board = new AbstractTile[numRows][numCols];
-        List<AbstractTile> tiles = TileFactory.createTiles(difficulty, this);
         mineList = new ArrayList<>();
         treasureList = new ArrayList<>();
-        for (AbstractTile tile : tiles) {
-            board[tile.getRow()][tile.getCol()] = tile;
-            boardPanel.add(tile.getButton());
-            if (tile instanceof MineTile) {
-                mineList.add(tile);
-            } else if (tile instanceof TreasureTile) {
-                treasureList.add(tile);
+
+        try {
+            List<AbstractTile> tiles = TileFactory.createTiles(difficulty, this);
+            if (tiles == null || tiles.isEmpty()) {
+                throw new IllegalStateException("TileFactory returned invalid tiles");
             }
+
+            for (AbstractTile tile : tiles) {
+                if (tile == null) continue;
+
+                int row = tile.getRow();
+                int col = tile.getCol();
+
+                if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+                    board[row][col] = tile;
+                    boardPanel.add(tile.getButton());
+
+                    if (tile instanceof MineTile) {
+                        mineList.add(tile);
+                    } else if (tile instanceof TreasureTile) {
+                        treasureList.add(tile);
+                    }
+                }
+            }
+
+            if (mineList.isEmpty()) {
+                throw new IllegalStateException("No mines were placed on the board");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error initializing tiles: " + e.getMessage());
+            throw new RuntimeException("Failed to initialize game board", e);
         }
     }
 
@@ -143,7 +167,6 @@ public class GameBoard {
         JFrame frame = new JFrame("Game Over");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Custom panel same as difficulty dialog
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setBackground(Color.decode("#27214f"));
@@ -160,7 +183,6 @@ public class GameBoard {
         scoreLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
         panel.add(scoreLabel, BorderLayout.CENTER);
 
-        // Button Panel (Retry and Quit)
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 10));
         buttonPanel.setBackground(Color.decode("#27214f"));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -209,28 +231,24 @@ public class GameBoard {
         tilesClicked++;
 
         int minesFound = 0;
-        minesFound += countMine(r - 1, c - 1);
-        minesFound += countMine(r - 1, c);
-        minesFound += countMine(r - 1, c + 1);
-        minesFound += countMine(r, c - 1);
-        minesFound += countMine(r, c + 1);
-        minesFound += countMine(r + 1, c - 1);
-        minesFound += countMine(r + 1, c);
-        minesFound += countMine(r + 1, c + 1);
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                if (dr == 0 && dc == 0) continue;
+                minesFound += countMine(r + dr, c + dc);
+            }
+        }
 
         if (minesFound > 0) {
             tile.getButton().setText(Integer.toString(minesFound));
         } else {
             tile.getButton().setText("");
 
-            checkMine(r - 1, c - 1);
-            checkMine(r - 1, c);
-            checkMine(r - 1, c + 1);
-            checkMine(r, c - 1);
-            checkMine(r, c + 1);
-            checkMine(r + 1, c - 1);
-            checkMine(r + 1, c);
-            checkMine(r + 1, c + 1);
+            for (int dr = -1; dr <= 1; dr++) {
+                for (int dc = -1; dc <= 1; dc++) {
+                    if (dr == 0 && dc == 0) continue;
+                    checkMine(r + dr, c + dc);
+                }
+            }
         }
 
         tile.getButton().setBackground(Color.decode("#1C0039"));
@@ -250,7 +268,6 @@ public class GameBoard {
         return 0;
     }
 
-    
     public void revealMines() {
         if (mineList == null || mineList.isEmpty()) {
             gameOver("Game Over!", false);

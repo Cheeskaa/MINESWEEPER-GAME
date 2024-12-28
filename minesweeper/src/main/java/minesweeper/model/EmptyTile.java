@@ -10,11 +10,9 @@ public class EmptyTile extends AbstractTile {
 
     @Override
     public void handleClick() {
-        if (!button.isEnabled()) {
-            return;
-        }
+        if (!button.isEnabled()) return;
         button.setEnabled(false);
         button.setBackground(Color.LIGHT_GRAY);
-        game.checkMine(r, c);
+        game.checkMine(r, c);  // This triggers flood fill
     }
 }

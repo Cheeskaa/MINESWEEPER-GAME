@@ -7,7 +7,7 @@ import java.awt.Font;
 import java.awt.Insets;
 import minesweeper.main.GameBoard;
 
-public abstract class AbstractTile {
+public abstract class AbstractTile implements GameComponent {
     protected int r;
     protected int c;
     protected JButton button;
@@ -34,6 +34,7 @@ public abstract class AbstractTile {
         return c;
     }
 
+    @Override
     public abstract void handleClick();
 
     private void styleButton() {
