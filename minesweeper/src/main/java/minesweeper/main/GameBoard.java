@@ -32,15 +32,6 @@ public class GameBoard {
     private int highScore;
     private int mineCount;
 
-    public int getNumRows() {
-        return numRows;
-    }
-
-    public int getNumCols() {
-        return numCols;
-    }
-
-
     public GameBoard(int difficulty) {
         if (difficulty < 0 || difficulty > 2) {
             throw new IllegalArgumentException("Invalid difficulty: " + difficulty);
@@ -219,30 +210,27 @@ public class GameBoard {
     }
 
     public void checkMine(int r, int c) {
-        if (r < 0 || r >= numRows || c < 0 || c >= numCols) {
+        if (!isValidCell(r, c) || !board[r][c].getButton().isEnabled() || board[r][c] instanceof MineTile) {
             return;
         }
-
+    
         AbstractTile tile = board[r][c];
-        if (!tile.getButton().isEnabled()) {
-            return;
-        }
         tile.getButton().setEnabled(false);
         tilesClicked++;
-
-        int minesFound = 0;
-        for (int dr = -1; dr <= 1; dr++) {
-            for (int dc = -1; dc <= 1; dc++) {
-                if (dr == 0 && dc == 0) continue;
-                minesFound += countMine(r + dr, c + dc);
-            }
-        }
-
-        if (minesFound > 0) {
-            tile.getButton().setText(Integer.toString(minesFound));
+    
+        int adjacentMines = countAdjacentMines(r, c);
+        if (adjacentMines > 0) {
+            // Show number with styling
+            tile.getButton().setText(String.valueOf(adjacentMines));
+            tile.getButton().setFont(new Font("Arial", Font.BOLD, 20));
+            tile.getButton().setForeground(getNumberColor(adjacentMines));
+            tile.getButton().setBackground(new Color(220, 220, 220));
         } else {
+            // Flood fill empty areas
             tile.getButton().setText("");
-
+            tile.getButton().setBackground(new Color(200, 200, 200));
+            
+            // Recursive flood fill
             for (int dr = -1; dr <= 1; dr++) {
                 for (int dc = -1; dc <= 1; dc++) {
                     if (dr == 0 && dc == 0) continue;
@@ -250,22 +238,39 @@ public class GameBoard {
                 }
             }
         }
-
-        tile.getButton().setBackground(Color.decode("#1C0039"));
-
+    
+        // Check win condition
         if (tilesClicked == numRows * numCols - mineList.size()) {
             gameOver("Congratulations! You cleared all mines!", true);
         }
     }
-
-    private int countMine(int r, int c) {
-        if (r < 0 || r >= numRows || c < 0 || c >= numCols) {
-            return 0;
+    
+    public int countAdjacentMines(int r, int c) {
+        int count = 0;
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                if (dr == 0 && dc == 0) continue;
+                if (isValidCell(r + dr, c + dc) && board[r + dr][c + dc] instanceof MineTile) {
+                    count++;
+                }
+            }
         }
-        if (board[r][c] instanceof MineTile) {
-            return 1;
+        return count;
+    }
+    
+    private boolean isValidCell(int r, int c) {
+        return r >= 0 && r < numRows && c >= 0 && c < numCols;
+    }
+    
+    private Color getNumberColor(int number) {
+        switch (number) {
+            case 1: return Color.BLUE;
+            case 2: return Color.GREEN;
+            case 3: return Color.RED;
+            case 4: return Color.MAGENTA;
+            case 5: return Color.ORANGE;
+            default: return Color.BLACK;
         }
-        return 0;
     }
 
     public void revealMines() {
@@ -375,4 +380,13 @@ public class GameBoard {
                 return "unknown";
         }
     }
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public int getNumCols() {
+        return numCols;
+    }
+
 }
