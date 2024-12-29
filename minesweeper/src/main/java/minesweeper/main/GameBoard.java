@@ -237,10 +237,11 @@ public class GameBoard {
     }
 
     public void checkMine(int r, int c) {
-        if (!isValidCell(r, c) || !board[r][c].getButton().isEnabled() || board[r][c] instanceof MineTile) {
-            return;
-        }
-    
+        System.out.println("checkMine called for (" + r + ", " + c + ")");
+        // if (!isValidCell(r, c) || !board[r][c].getButton().isEnabled() || board[r][c] instanceof MineTile) {
+        //     return;
+        // }
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@");
         Queue<Point> queue = new LinkedList<>();
         queue.add(new Point(r, c));
         
@@ -249,15 +250,16 @@ public class GameBoard {
             int row = p.x;
             int col = p.y;
             
-            if (!isValidCell(row, col) || !board[row][col].getButton().isEnabled()) {
-                continue;
-            }
-            
+            if (!isValidCell(row, col) || (row != r || col != c) && !board[row][col].getButton().isEnabled()) {
+            continue;
+        }
+          
             AbstractTile tile = board[row][col];
             tile.getButton().setEnabled(false);
             tilesClicked++;
             
             int adjacentMines = countAdjacentMines(row, col);
+            System.out.println("Tile at (" + r + ", " + c + ") has " + adjacentMines + " adjacent mines.");
             if (adjacentMines > 0) {
                 tile.getButton().setText(String.valueOf(adjacentMines));
                 tile.getButton().setFont(new Font("Arial", Font.BOLD, 20));
@@ -276,7 +278,16 @@ public class GameBoard {
             }
         }
         
-        if (tilesClicked == numRows * numCols - mineList.size()) {
+        int safeTilesRemaining = 0;
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                if (!(board[i][j] instanceof MineTile) && board[i][j].getButton().isEnabled()) {
+                    safeTilesRemaining++;
+                }
+            }
+        }
+
+        if (safeTilesRemaining == 0) {
             gameOver("Congratulations! You cleared all mines!", true);
         }
     }
