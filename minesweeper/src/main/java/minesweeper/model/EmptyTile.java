@@ -19,7 +19,7 @@ public class EmptyTile extends AbstractTile {
             return;
         }
 
-        button.setEnabled(false);
+        //button.setEnabled(false);
         button.setBackground(REVEALED_COLOR);
         
         // Debugging statement
