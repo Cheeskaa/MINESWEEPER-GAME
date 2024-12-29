@@ -1,18 +1,27 @@
 package minesweeper.main;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 import minesweeper.model.AbstractTile;
 import minesweeper.model.TileFactory;
 import minesweeper.model.TreasureTile;
 import minesweeper.model.MineTile;
 import javax.swing.*;
+
+import java.awt.event.MouseAdapter;
+
 import java.awt.*;
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.Queue;
+import java.util.LinkedList;
 import javax.sound.sampled.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+
 
 public class GameBoard {
     private final int difficulty;
@@ -91,43 +100,61 @@ public class GameBoard {
     }
 
     private void initializeTiles() {
-        board = new AbstractTile[numRows][numCols];
-        mineList = new ArrayList<>();
-        treasureList = new ArrayList<>();
+    board = new AbstractTile[numRows][numCols];
+    mineList = new ArrayList<>();
+    treasureList = new ArrayList<>();
 
-        try {
-            List<AbstractTile> tiles = TileFactory.createTiles(difficulty, this);
-            if (tiles == null || tiles.isEmpty()) {
-                throw new IllegalStateException("TileFactory returned invalid tiles");
-            }
-
-            for (AbstractTile tile : tiles) {
-                if (tile == null) continue;
-
-                int row = tile.getRow();
-                int col = tile.getCol();
-
-                if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
-                    board[row][col] = tile;
-                    boardPanel.add(tile.getButton());
-
-                    if (tile instanceof MineTile) {
-                        mineList.add(tile);
-                    } else if (tile instanceof TreasureTile) {
-                        treasureList.add(tile);
-                    }
-                }
-            }
-
-            if (mineList.isEmpty()) {
-                throw new IllegalStateException("No mines were placed on the board");
-            }
-
-        } catch (Exception e) {
-            System.err.println("Error initializing tiles: " + e.getMessage());
-            throw new RuntimeException("Failed to initialize game board", e);
+    try {
+        List<AbstractTile> tiles = TileFactory.createTiles(difficulty, this);
+        if (tiles == null || tiles.isEmpty()) {
+            throw new IllegalStateException("TileFactory returned invalid tiles");
         }
+
+        for (AbstractTile tile : tiles) {
+            if (tile == null) continue;
+
+            int row = tile.getRow();
+            int col = tile.getCol();
+
+            if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+                board[row][col] = tile;
+                JButton button = tile.getButton();
+                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20)); // Ensure font supports emoji
+                boardPanel.add(button);
+
+                if (tile instanceof MineTile) {
+                    mineList.add(tile);
+                } else if (tile instanceof TreasureTile) {
+                    treasureList.add(tile);
+                }
+
+                // Add right-click listener for flagging
+                button.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        if (SwingUtilities.isRightMouseButton(e)) {
+                            if (!button.getText().equals("🚩")) {
+                                button.setText("🚩");
+                                button.setEnabled(false);
+                            } else {
+                                button.setText("");
+                                button.setEnabled(true);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        if (mineList.isEmpty()) {
+            throw new IllegalStateException("No mines were placed on the board");
+        }
+
+    } catch (Exception e) {
+        System.err.println("Error initializing tiles: " + e.getMessage());
+        throw new RuntimeException("Failed to initialize game board", e);
     }
+}
 
     private void startTimer() {
         timer = new Timer(1000, e -> {
@@ -143,7 +170,7 @@ public class GameBoard {
         String scoreMessage = "Time: " + elapsedTime + "s\nHigh Score: " + highScore + "s";
 
         if (won) {
-            if (elapsedTime < highScore) {
+            if (elapsedTime < highScore || highScore == 0) {
                 highScore = elapsedTime;
                 saveHighScore(difficulty);
                 scoreMessage = "New High Score: " + elapsedTime + "s";
@@ -213,65 +240,78 @@ public class GameBoard {
         if (!isValidCell(r, c) || !board[r][c].getButton().isEnabled() || board[r][c] instanceof MineTile) {
             return;
         }
-
-        AbstractTile tile = board[r][c];
-        tile.getButton().setEnabled(false);
-        tilesClicked++;
-
-        int adjacentMines = countAdjacentMines(r, c);
-        System.out.println("Checking tile at (" + r + ", " + c + "), adjacent mines: " + adjacentMines);
-        if (adjacentMines > 0) {
-            // Show number with styling
-            tile.getButton().setText(String.valueOf(adjacentMines));
-            tile.getButton().setFont(new Font("Arial", Font.BOLD, 20));
-            tile.getButton().setForeground(getNumberColor(adjacentMines));
-            tile.getButton().setBackground(new Color(220, 220, 220));
-        } else {
-            // Flood fill empty areas
-            tile.getButton().setText("");
-            tile.getButton().setBackground(new Color(200, 200, 200));
+    
+        Queue<Point> queue = new LinkedList<>();
+        queue.add(new Point(r, c));
+        
+        while (!queue.isEmpty()) {
+            Point p = queue.poll();
+            int row = p.x;
+            int col = p.y;
             
-            // Recursive flood fill
-            for (int dr = -1; dr <= 1; dr++) {
-                for (int dc = -1; dc <= 1; dc++) {
-                    if (dr == 0 && dc == 0) continue;
-                    checkMine(r + dr, c + dc);
+            if (!isValidCell(row, col) || !board[row][col].getButton().isEnabled()) {
+                continue;
+            }
+            
+            AbstractTile tile = board[row][col];
+            tile.getButton().setEnabled(false);
+            tilesClicked++;
+            
+            int adjacentMines = countAdjacentMines(row, col);
+            if (adjacentMines > 0) {
+                tile.getButton().setText(String.valueOf(adjacentMines));
+                tile.getButton().setFont(new Font("Arial", Font.BOLD, 20));
+                setNumberColor(tile.getButton(), adjacentMines);
+            } else {
+                tile.getButton().setText("");
+                tile.getButton().setBackground(new Color(200, 200, 200));
+                
+                for (int dr = -1; dr <= 1; dr++) {
+                    for (int dc = -1; dc <= 1; dc++) {
+                        if (dr != 0 || dc != 0) {
+                            queue.add(new Point(row + dr, col + dc));
+                        }
+                    }
                 }
             }
         }
-
-        // Check win condition
+        
         if (tilesClicked == numRows * numCols - mineList.size()) {
             gameOver("Congratulations! You cleared all mines!", true);
         }
     }
-
+    
     public int countAdjacentMines(int r, int c) {
         int count = 0;
         for (int dr = -1; dr <= 1; dr++) {
             for (int dc = -1; dc <= 1; dc++) {
                 if (dr == 0 && dc == 0) continue;
-                if (isValidCell(r + dr, c + dc) && board[r + dr][c + dc] instanceof MineTile) {
+                int newRow = r + dr;
+                int newCol = c + dc;
+                if (isValidCell(newRow, newCol) && board[newRow][newCol] instanceof MineTile) {
                     count++;
                 }
             }
         }
         return count;
     }
-
-    private boolean isValidCell(int r, int c) {
-        return r >= 0 && r < numRows && c >= 0 && c < numCols;
-    }
-
-    private Color getNumberColor(int number) {
-        switch (number) {
-            case 1: return Color.BLUE;
-            case 2: return Color.GREEN;
-            case 3: return Color.RED;
-            case 4: return Color.MAGENTA;
-            case 5: return Color.ORANGE;
-            default: return Color.BLACK;
+    
+    private void setNumberColor(JButton button, int number) {
+        Color[] colors = {
+            null,
+            Color.BLUE,        // 1
+            new Color(0, 128, 0),  // 2 - Dark Green
+            Color.RED,         // 3
+            new Color(0, 0, 128),  // 4 - Dark Blue
+            new Color(128, 0, 0),  // 5 - Dark Red
+            Color.CYAN,        // 6
+            Color.BLACK,       // 7
+            Color.GRAY         // 8
+        };
+        if (number > 0 && number < colors.length) {
+            button.setForeground(colors[number]);
         }
+        button.setBackground(new Color(220, 220, 220));
     }
 
     public void revealMines() {
@@ -293,6 +333,7 @@ public class GameBoard {
                                 case 0:
                                     button.setBackground(Color.RED);
                                     button.setText("💣");
+                                    button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20)); // Ensure font supports emoji
                                     break;
                                 case 1:
                                     button.setBackground(Color.ORANGE);
@@ -333,15 +374,20 @@ public class GameBoard {
     }
 
     public void revealTreasure(AbstractTile tile) {
-        tile.getButton().setText("💎");
-        tile.getButton().setForeground(Color.decode("#FFD700"));
-        tile.getButton().removeMouseListener(tile.getButton().getMouseListeners()[0]);  // Remove click functionality
+        JButton button = tile.getButton();
+        button.setText("💎");
+        button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20)); // Ensure font supports emoji
+        button.setForeground(Color.decode("#FFD700")); // Gold for treasure
+        button.setEnabled(false); // Disable the button
         gameOver("You found the treasure!", true);
     }
 
     private void playBombSound() {
         try {
             File soundFile = new File("bomb_sound.wav");
+            if (!soundFile.exists()) {
+                throw new FileNotFoundException("Sound file not found: " + soundFile.getAbsolutePath());
+            }
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);
@@ -352,23 +398,42 @@ public class GameBoard {
     }
 
     public void loadHighScore(int difficulty) {
-        String filename = "highscore_" + getDifficultyName(difficulty) + ".txt";
+        String dir = System.getProperty("user.home") + File.separator + "minesweeper_scores";
+        String filename = dir + File.separator + "highscore_" + getDifficultyName(difficulty) + ".txt";
+        
+        File file = new File(filename);
+        if (!file.exists()) {
+            highScore = Integer.MAX_VALUE;
+            System.out.println("High score file does not exist. Setting high score to Integer.MAX_VALUE.");
+            return;
+        }
+    
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            highScore = Integer.parseInt(reader.readLine());
+            String line = reader.readLine();
+            highScore = (line != null) ? Integer.parseInt(line) : Integer.MAX_VALUE;
+            System.out.println("High score loaded from file: " + filename + " - High score: " + highScore);
         } catch (IOException | NumberFormatException e) {
-            highScore = 0;
+            highScore = Integer.MAX_VALUE;
+            System.err.println("Error loading high score from file: " + filename + " - Error: " + e.getMessage());
         }
     }
-
+    
     public void saveHighScore(int difficulty) {
-        String filename = "highscore_" + getDifficultyName(difficulty) + ".txt";
+        String dir = System.getProperty("user.home") + File.separator + "minesweeper_scores";
+        File directory = new File(dir);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        
+        String filename = dir + File.separator + "highscore_" + getDifficultyName(difficulty) + ".txt";
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             writer.write(Integer.toString(highScore));
+            System.out.println("High score saved to file: " + filename + " - High score: " + highScore);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error saving high score to file: " + filename + " - Error: " + e.getMessage());
         }
     }
-
+    
     private String getDifficultyName(int difficulty) {
         switch (difficulty) {
             case 0:
@@ -380,6 +445,10 @@ public class GameBoard {
             default:
                 return "unknown";
         }
+    }
+
+    private boolean isValidCell(int r, int c) {
+        return r >= 0 && r < numRows && c >= 0 && c < numCols;
     }
 
     public int getNumRows() {
